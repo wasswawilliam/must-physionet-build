@@ -116,7 +116,7 @@ ENABLE_CLOUD_RESEARCH_ENVIRONMENTS="False"
 CLOUD_RESEARCH_ENVIRONMENTS_API_URL="https://example.api"
 
 # Site-specific content
-SITE_NAME="DataShare"
+SITE_NAME="MUST PhysioNet"
 STRAPLINE="Data sharing for everyone"
 EMAIL_SIGNATURE="Regards, The Development Team"
 FOOTER_MANAGED_BY="DataShare Lab"
