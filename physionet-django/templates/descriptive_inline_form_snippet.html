@@ -1,0 +1,31 @@
+{% csrf_token %}
+{% for field in form.visible_fields %}
+  <div class="form-group row">
+    <label class="col-md-3" for="{{ field.id_for_label }}">
+      <div class="field-label">
+        {{ field.label|capfirst }}
+        {% if field.field.required %}
+          <a style="color:red"> *</a>
+        {% endif %}
+      </div>
+    </label>
+    <div class='col-md-9'>
+      <p>{{ field.help_text|safe }}</p>
+      {{ field }}
+      {% for error in field.errors %}
+        <div class="alert alert-danger">
+          <strong>{{ error|escape }}</strong>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+  <hr>
+{% endfor %}
+{% for error in form.non_field_errors %}
+  <div class="alert alert-danger">
+    <strong>{{ error|escape }}</strong>
+  </div>
+{% endfor %}
+{% for field in form.hidden_fields %}
+  {{ field }}
+{% endfor %}

@@ -1,0 +1,58 @@
+[tool.poetry]
+name = "physionet-build"
+version = "0.1.0"
+description = ""
+authors = []
+
+[tool.poetry.dependencies]
+python = "^3.9"
+bleach = "^3.3.0"
+boto3 = "^1.28.53"
+botocore = "^1.31.53"
+chardet = "^3.0.4"
+cryptography = "^41.0.6"
+Django = "4.1.13"
+django-autocomplete-light = "^3.9.4"
+django-background-tasks-updated = "=1.2.7"
+django-ckeditor = "6.5.1"
+djangorestframework = "3.14.0"
+google-cloud-storage = "^1.41.1"
+html2text = "^2018.1.9"
+Pillow = "^10.0.1"
+python-decouple = "^3.1"
+uWSGI = "2.0.22"
+pyOpenSSL = "^23.2.0"
+google-api-python-client = "^1.7.9"
+psycopg2 = "2.9.5"
+httplib2 = "^0.19.0"
+oauthlib = "^3.2.2"
+requests-oauthlib = "^1.3.0"
+sentry-sdk = "^1.14.0"
+python-json-logger = "^2.0.2"
+django-storages = { version = "^1.11.1", extras = ["google"] }
+"pdfminer.six" = "^20211012"
+requests = "2.31.0"
+cffi = "^1.15.1"
+pytz = "^2022.1"
+django-sass = "1.1.0"
+zxcvbn = "^4.4.28"
+certifi = "^2023.7.22"
+setuptools = "65.5.1"
+django-js-asset = "2.0.0"
+hdn-research-environment = "2.3.8"
+django-oauth-toolkit = "^2.2.0"
+django-cors-headers = "^3.14.0"
+urllib3 = "^1.26.18"
+
+[tool.poetry.dev-dependencies]
+coverage = "^7.2.3"
+django-coverage-plugin = "^3.1.0"
+django-debug-toolbar = "^3.2.4"
+moto = "^4.2.0"
+requests = "^2.21.0"
+requests-mock = "^1.7.0"
+selenium = "^3.141.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

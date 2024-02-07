@@ -1,0 +1,119 @@
+{% extends "user/settings.html" %}
+
+
+{% block title %}Edit Emails{% endblock %}
+
+
+{% block main_content %}
+
+<h1 class="form-signin-heading">Edit Emails</h1>
+
+<hr>
+
+<div class="card">
+  <ul class="list-group list-group-flush">
+    {% for email in associated_emails %}
+      <li class="list-group-item">
+        {{ email }}&nbsp;
+        {% if email.is_primary_email %}
+          <span class="badge badge-success">Primary</span>&nbsp;
+        {% endif %}
+        {% if email.is_public %}
+          <span class="badge badge-primary">Public</span>&nbsp;
+        {% endif %}
+        {% if not email.is_verified %}
+          <span class="badge badge-secondary">Unverified</span>&nbsp;
+        {% endif %}
+        <a class="float-right">
+          {% if not email.is_primary_email %}
+            <button class="btn btn-sm" type="button" title="Remove Email" style="background:none" data-toggle="modal" data-target="#remove-{{ email.id }}-modal"><i class="fas fa-trash-alt" style="color:#cb2431"></i></button>
+            {# Modal for removing email #}
+            <div class="modal fade" id="remove-{{ email.id }}-modal" role="dialog" aria-labelledby="remove-{{ email.id }}-modal" aria-hidden="true">
+              <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title">Remove Email</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>
+                  <div class="modal-body">
+                    Are you sure you want to remove <strong>{{ email }}</strong> from your account?
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <form action="{% url 'edit_emails' %}" method="post">
+                      {% csrf_token %}
+                      <button class="btn btn-danger" name="remove_email" value="{{ email.id }}" type="submit">Remove Email</button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+          {% else %}
+            {# placeholder for card height #}
+            <button class="btn btn-sm" style="background:none" type="button"><i class="fas fa-trash-alt" style="color:white"></i></button>
+          {% endif %}
+        </a>
+      </li>
+    {% endfor %}
+  </ul>
+</div>
+
+
+<br>
+<h4>Primary Email</h4>
+<p>The email address used for authentication, and email notifications. We recommend using an institutional/academic email address where possible.</p>
+<form action="{% url 'edit_emails' %}" method="post" class="form-signin row no-pd">
+  {% csrf_token %}
+  <div class='col-md-9'>
+    {% include "form_snippet_no_labels.html" with form=primary_email_form %}
+  </div>
+  <div class="btn-container-rsp mg-left">
+    <button class="btn btn-primary btn-rsp" name="set_primary_email" type="submit">Select</button>
+  </div>
+</form>
+
+
+<hr>
+<h4>Public Email</h4>
+<p>The email address shown in your <a href="{% url 'public_profile' user.username %}">public profile</a>.</p>
+<form action="{% url 'edit_emails' %}" method="post" class="form-signin row no-pd">
+  {% csrf_token %}
+  <div class='col-md-9'>
+    {% include "form_snippet_no_labels.html" with form=public_email_form %}
+  </div>
+  <div class="btn-container-rsp mg-left">
+    <button class="btn btn-primary btn-rsp" name="set_public_email" type="submit">Select</button>
+  </div>
+</form>
+
+
+<hr>
+<h4>Add Email</h4>
+<p>Add a new email address (maximum {{ max_associated_emails_allowed }}).</p>
+<form action="{% url 'edit_emails' %}" method="post" class="form-signin row no-pd" name="add_email">
+  {% csrf_token %}
+
+    <div class='col-md-9'>
+        {% include "form_snippet_no_labels.html" with form=add_email_form %}
+    </div>
+    <div class="btn-container-rsp mg-left">
+        <button class="btn btn-primary btn-rsp" name="add_email" type="submit" {% if total_associated_emails >= max_associated_emails_allowed %} disabled  {% endif %}>Add Email</button>
+    </div>
+    {% if total_associated_emails >= max_associated_emails_allowed %}
+        <p>You have reached the maximum number of emails. Please remove an existing email to add another.</p>
+    {% endif %}
+</form>
+
+{% endblock %}
+
+{% block local_js_bottom %}
+<script>
+  $(function () {
+      {% if total_associated_emails >= max_associated_emails_allowed %}
+        document.getElementById('id_email').readOnly = true;
+      {% endif %}
+  });
+</script>
+{% endblock %}

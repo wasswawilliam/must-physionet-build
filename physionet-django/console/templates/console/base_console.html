@@ -1,0 +1,33 @@
+<!-- The base template used for the console pages -->
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+  <head>
+    <title>{% block title %}{% endblock %}</title>
+    {% include "base_css.html" %}
+    <link rel="stylesheet" type="text/css" href="{% static 'console/css/console.css' %}"/>
+    <link rel="stylesheet" type="text/css" href="{% static 'custom/css/form-control-input.css' %}"/>
+    <noscript><link rel="stylesheet" type="text/css" href="{% static 'console/css/console-noscript.css' %}"/></noscript>
+    {% block local_css %}{% endblock %}
+    {% include "base_js_top.html" %}
+    {% block local_js_top %}{% endblock %}
+    <link rel="shortcut icon" type="image/png" href="{% static 'favicon.ico' %}"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  </head>
+
+  <body class="fixed-nav sticky-footer bg-dark">
+    {% include "console/console_navbar.html" %}
+    {# Main Content rectangle #}
+    <div class="content-wrapper">
+      <div class="container-fluid">
+        {% include "message_snippet.html" %}
+        {% block content %}{% endblock %}
+      </div>
+    </div>
+    {% include 'footer.html' %}
+    {% include "base_js_bottom.html" %}
+    {% block local_js_bottom %}{% endblock %}
+    {# Console js #}
+    <script src="{% static 'console/js/console.js' %}"></script>
+  </body>
+</html>

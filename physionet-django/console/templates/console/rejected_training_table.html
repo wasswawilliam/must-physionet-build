@@ -1,0 +1,33 @@
+<div class="table-responsive" id="searchitems">
+    <table class="table table-bordered table-cred">
+        <thead>
+            <tr class="header">
+                <th>User</th>
+                <th>Full Name</th>
+                <th>Email</th>
+                <th>Training Type</th>
+                <th>Identity Verified</th>
+                <th>Submitted</th>
+                <th>Rejected</th>
+                <th>Reviewer</th>
+                <th>View</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for training in trainings %}
+                <tr>
+                    <td><a href="{% url 'user_management' training.user.username %}">{{ training.user }}</a></td>
+                    <td>{{ training.user.get_full_name }}</td>
+                    <td>{{ training.user.email }}</td>
+                    <td>{{ training.training_type.name }}</td>
+                    <td>{{ training.user.is_credentialed|yesno:"Yes,No" }}</td>
+                    <td>{{ training.application_datetime|date }}</td>
+                    <td>{{ training.process_datetime|date }}</td>
+                    <td>{{ training.reviewer.username }}</td>
+                    <td><a href="{% url 'training_detail' training.id %}" class="btn btn-sm btn-primary" role="button">View</a></td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% include "console/pagination.html" with pagination=trainings %}
+</div>

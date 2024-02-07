@@ -1,0 +1,11 @@
+{% load i18n %}{% autoescape off %}{% filter wordwrap:70 %}
+{{ project_info }}
+
+Dear {{ name }},
+
+We are pleased to say that your project entitled "{{ project.title }}" is now under review by the editorial team. We will be in touch again after our initial review is complete.
+
+{{ signature }}
+
+{{ footer }}
+{% endfilter %}{% endautoescape %}

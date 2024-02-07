@@ -1,0 +1,31 @@
+Dear {{ user.get_full_name }},
+{% if successful %}
+{% if data_access.platform == 3 %}You have requested access to the "{{ project }}" project in GCP Storage.
+
+The URL for the storage bucket in GCP is:
+https://console.cloud.google.com/storage/browser/{{ project.gcp.bucket_name }}
+
+You can use the following command to copy the content of the bucket to your computer:
+gsutil -m -u YOUR_PROJECT_ID cp -r gs://{{ project.gcp.bucket_name }} DESTINATION
+
+To access the bucket with command line tools, you will need to set up cloud credentials:
+https://cloud.google.com/storage/docs/gsutil_install#authenticate
+{% else %}You have requested access to {{ project }} in GCP BigQuery.
+
+To access this resource:
+
+1. Navigate to: https://console.cloud.google.com/bigquery
+2. Click the "+ADD DATA" button. 
+3. Select "Star a project by name", then enter "physionet-data".
+3. That's it! You should see the resources in the sidebar.
+{% endif %}
+{% else %}We were unable to grant access to {{ project }} in GCP.
+
+Reasons may include:
+- Your cloud ID or email is invalid. Please check the cloud credentials in your profile.
+- The service is no longer available.
+
+Please reapply for access if you are able to address the issue.
+
+If you think this was an error on our part, please contact {{ contact_email }}.{% endif %}
+{{ signature }}

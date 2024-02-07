@@ -1,0 +1,52 @@
+{% extends "console/base_console.html" %}
+
+{% block title %}Guidelines for reviewers{% endblock %}
+
+{% block content %}
+<div class="card mb-3">
+  <div class="card-header">
+      Guidelines for reviewers
+  </div>
+  <div class="card-body">
+    <div class="table-responsive">
+    <p>When reviewing content, check that the requirements below are met. If not, you can copy the relevant points below into your message to the authors, preceded by "Please ensure that:".</p>
+
+    <h4>All projects</h4>
+    <ul>
+        <li>A README file is included alongside the files. At minimum, this file should include a title and a brief description of the package content.</li>
+        <li>Sensitive data and protected health information have been removed.</li>
+        <li>Files should be clearly named and must not include spaces (use underscores instead for increased readability) or special characters (e.g. "/","\,"."). Further, filenames should generally be lowercase (exceptions are "special files”, such as the RECORDS and ANNOTATORS files used for waveforms). Please use brevity when naming files (e.g. 1001_abp.dat is preferable to subject_1001_ABP_wave_100Hz.dat).</li>
+        <li>Files should be in open-source format and machine readable. Proprietary formats such as MatLab (*.mat), Excel (*.xls) or Microsoft Word (*.doc) should be converted to an open-source format.</li>
+    </ul>
+
+    <h4>Data (general)</h4>
+    <ul>
+        <li>Comma-Separated Value (CSV) formatted files are a good option for small datasets. CSVs should be formatted according to the <a href="https://tools.ietf.org/html/rfc4180#section-1">RFC 4180 specification</a>.</li>
+        <li>Tabulated data is arranged such that each variable is a column and each observation (or case) is a row ("tidy data").</li>
+    </ul>
+
+    <h4>Data (waveforms)</h4>
+    <ul>
+        <li>In general, high time-resolution data such as ECG and EEG recordings should be stored in a WFDB compatible (or other open-source) format where possible. Details such as gain and baseline should be included in the file headers.</li>
+        <li>The submitted project should include sufficient information to visualize waveforms in LightWave (i.e. RECORDS, *.hea, etc. files). The *.hea files should contain descriptive signal names (i.e. no repeated signal names inside of the the same *.hea file).</li>
+    </ul>
+
+    <h4>Software</h4>
+    <ul>
+        <li>Instructions for installation and usage should be clearly documented.</li>
+        <li>Dependencies should be indicated in a requirements file or similar.</li>
+        <li>Unit tests should be used to demonstrate correct functioning of major features of the software.</li>
+        <li>Standard style guidelines should be followed where appropriate (for example, PEP8 for Python).</li>
+    </ul>
+
+    <h4>Challenges</h4>
+    <ul>
+        <li>The objective of the Challenge is clearly stated.</li> 
+        <li>A timeline is provided, including a start date, final submission date, and scoring data.</li> 
+        <li>The criteria for assessment are clear and unambiguous.</li> 
+    </ul>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

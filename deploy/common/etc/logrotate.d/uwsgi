@@ -1,0 +1,15 @@
+/data/log/uwsgi/*.log
+{
+        rotate 90
+        daily
+        missingok
+        notifempty
+        delaycompress
+        compress
+        su www-data www-data
+        create 0640 www-data www-data
+        sharedscripts
+        postrotate
+                systemctl reload emperor.uwsgi
+        endscript
+}

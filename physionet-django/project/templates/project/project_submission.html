@@ -1,0 +1,99 @@
+{% extends "project/project.html" %}
+
+{% block title %}Project Submission - {{ project }}{% endblock %}
+
+{% load static %}
+
+{% block local_css %}
+<link rel="stylesheet" type="text/css" href="{% static 'project/css/submission-timeline.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'custom/css/form-control-input.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'custom/css/settings.css' %}">
+{% endblock %}
+
+{% load project_templatetags %}
+
+{% block main_content %}
+<script>
+  // Check the integrity of the metadata fields and enable/disable the
+  // submission buttons
+  function checkIntegrity(is_resubmission){
+    if (Boolean(is_resubmission)){
+      var target_modal = "#passes-checks-resubmission";
+      var button_id = "resubmit-project-button";
+    }
+    else{
+      var target_modal = "#passes-checks";
+      var button_id = "submit-project-button";
+    }
+    var comment_input_id = "id_author_comments";
+    document.getElementById(comment_input_id).disabled = true;
+
+    $.ajax({url: "{% url 'check_integrity' project.slug %}",
+      success: function(result){
+        if (result.passes_checks){
+          $(target_modal).html("<i class='fas fa-check' style='color:green'></i> The automatic checks have passed. You may submit the project for review. Note: you will no longer be able to edit the project.");
+          document.getElementById(button_id).disabled = false;
+          document.getElementById(comment_input_id).disabled = false;
+        }
+        else{
+          message = "<p><i class='fas fa-times' style='color:red'></i> The automatic checks have failed. The following errors must be addressed before you can submit the project:</p><ul>";
+          for (i=0; i<result.integrity_errors.length; i++) {
+            message += "<li>" + result.integrity_errors[i] + "</li>";
+          }
+          message += "</ul>";
+          $(target_modal).html(message);
+        }
+      }
+    });
+  }
+</script>
+
+
+<h2 class="form-signin-heading">Project Submission</h2>
+<hr>
+{% if not project.under_submission %}
+  <p>The project is not under submission. If the
+    <a href="{% url 'project_preview' project.slug %}" target="_blank">
+    preview</a> appears satisfactory to all authors, the submitting author may
+    submit the project for review.</p>
+  {% if is_submitting %}
+    <hr>
+    <div class="btn-container-rsp">
+      <button id="submit-project-modal-button" type="button" class="btn btn-primary btn-rsp" data-toggle="modal" data-target="#submit-modal" onclick="checkIntegrity(false)">
+        Submit Project
+      </button>
+    </div>
+
+    <div class="modal fade" id="submit-modal" tabindex="-1" role="dialog" aria-labelledby="submit-modal" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Submit Project</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <form action="" method="post">
+            <div class="modal-body">
+              {% csrf_token %}
+              <p id="passes-checks"><i class="fas fa-spinner"></i> Running checks on project...</p>
+              {{ author_comments_form }}
+            </div>
+            <div class="modal-footer">
+              <button id="submit-project-button" class="btn btn-primary" type="submit" name="submit_project" disabled>Submit Project</button>
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+{% else %}
+  {# The active submission status timeline #}
+  <div class="card">
+    <div class="card-header">Submission Timeline (New to Old)</div>
+    {% include "project/active_submission_timeline.html" %}
+  </div>
+{% endif %}
+
+{% endblock %}

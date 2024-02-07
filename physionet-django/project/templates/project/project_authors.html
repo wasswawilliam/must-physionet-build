@@ -1,0 +1,230 @@
+{% extends "project/project.html" %}
+
+{% load static %}
+
+{% load project_templatetags %}
+
+{% block title %}Project Authors - {{ project }}{% endblock %}
+
+{% block local_js_top %}
+<script src="{% static 'custom/js/cookie.js' %}"></script>
+<script src="{% static 'project/js/dynamic-formset.js' %}"></script>
+{% if is_submitting %}
+  <script>
+    // Ajax call to update authors list
+    function moveAuthor(author_id, direction){
+        var csrftoken = getCookie('csrftoken');
+        $.ajax({
+                type: "POST",
+                url: "{% url 'move_author' project.slug %}",
+                data: {'csrfmiddlewaretoken':csrftoken,
+                       'author_id':author_id, 'direction':direction
+                },
+                success: function reloadSection(result){
+                    $("#author-list").html(result);
+                },
+        });
+    };
+  </script>
+{% endif %}
+{% endblock %}
+
+{% block main_content %}
+
+
+<h2 class="form-signin-heading">1. Project Authors</h2>
+<hr>
+{% include "about/authors.html" %}
+<hr>
+
+{% if not project.author_editable %}
+  <div class="alert alert-form alert-warning alert-dismissible">
+    <strong>The project cannot be edited right now.</strong>
+  </div>
+{% endif %}
+
+{% include "project/author_list.html" %}
+<br>
+
+<div class="card">
+  <div class="card card-header">
+    <h3>Outstanding Author Invitations</h3>
+  </div>
+  {% if invitations %}
+  <ul class="list-group list-group-flush">
+    {% for invitation in invitations %}
+      <li class="list-group-item">
+        <strong>Email</strong>: {{ invitation.email }}<br>
+          {% if is_submitting %}
+            <a class="float-right">
+              <button class="btn btn-sm" type="button" style="background:none" data-toggle="modal" data-target="#cancel-{{ invitation.id }}-modal"><i class="fas fa-user-times" style="color:#cb2431"></i></button>
+            </a>
+          {% endif %}
+        <strong>Inviter</strong>: {{ invitation.inviter }}<br>
+        <strong>Sent</strong>: {{ invitation.request_datetime|date }}
+      </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+    <div class="card-body text-center">
+      <p class="card-text">No outstanding invitations.</p>
+    </div>
+  {% endif %}
+</div>
+<hr>
+
+{% if is_submitting %}
+  <br>
+  <h3>Invite Author</h3>
+  <form action="{% url 'project_authors' project.slug %}" method="post" class="form-signin no-pd">
+    {% csrf_token %}
+    {% include "inline_form_snippet.html" with form=invite_author_form %}
+    <button class="btn btn-success btn-rsp" name="invite_author" type="submit">Invite Author</button>
+  </form>
+  <hr>
+
+  <br>
+  <h3>Corresponding Author</h3>
+  <p>The corresponding author is responsible for responding to inquiries from users post publication.</p>
+  <form action="{% url 'project_authors' project.slug %}" method="post" class="form-signin no-pd">
+    {% csrf_token %}
+    {% include "inline_form_snippet.html" with form=corresponding_author_form %}
+    <button class="btn btn-primary btn-rsp" name="corresponding_author" type="submit">Set Corresponder</button>
+  </form>
+  <hr>
+{% endif %}
+
+{% if corresponding_email_form %}
+  <br>
+  <h3>Corresponding Email</h3>
+  <p>You are the the selected corresponding author. Choose one of your emails to be listed for correspondence.</p>
+  <form action="{% url 'project_authors' project.slug %}" method="post" class="form-signin no-pd">
+    {% csrf_token %}
+    {% include "inline_form_snippet.html" with form=corresponding_email_form %}
+    <button class="btn btn-primary btn-rsp" name="corresponding_email" type="submit">Set Email</button>
+  </form>
+  <hr>
+{% endif %}
+
+{# Modals for removing authors and invitations #}
+{% if is_submitting %}
+  {% for author in authors %}
+    {% if not author.is_submitting_author %}
+      <div class="modal fade" id="remove-{{ author.id }}-modal" role="dialog" aria-labelledby="remove-{{ author.id }}-modal" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Remove Author</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              Are you sure you want to remove <strong>{{ author }}</strong> from the project's authors?
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+              <form action="" method="post">
+                {% csrf_token %}
+                <button class="btn btn-danger" name="remove_author" value="{{ author.id }}" type="submit">Remove Author</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+  {% endfor %}
+
+  {% for invitation in invitations %}
+    <div class="modal fade" id="cancel-{{ invitation.id }}-modal" role="dialog" aria-labelledby="cancel-{{ invitation.id }}-modal" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Cancel Invitation</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            Are you sure you want to cancel the invitation to <strong>{{ invitation.email }}</strong>?
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <form action="" method="post">
+              {% csrf_token %}
+              <button class="btn btn-danger" name="cancel_invitation" value="{{ invitation.id }}" type="submit">Cancel Invitation</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+{% endif %}
+<br>
+
+<h3>Your Affiliations</h3>
+<p>Set up to three affiliations for your author profile. Note: these fields are not tied to your user profile.</p>
+<form action="{% url 'project_authors' project.slug %}" method="post" class="form-signin no-pd" onsubmit="return validateItems('affiliation-list', 'name', 'Affiliations')">
+  {% csrf_token %}
+  {% include 'project/item_list.html' with item="affiliation" item_label=affiliation_formset.item_label formset=affiliation_formset form_name=affiliation_formset.form_name add_item_url=add_item_url remove_item_url=remove_item_url %}
+  <button class="btn btn-primary btn-rsp" name="edit_affiliations" type="submit">Set Affiliations</button>
+</form>
+<hr>
+<br>
+
+{# Transfer project to a new submitting author #}
+{% if is_submitting %}
+  <h3>Submitting Author</h3>
+  <p>Only the submitting author of a project is able to edit content.
+     You may transfer the role of submitting author to a co-author.
+     Choose one of the co-authors below to make them the submitting author for this project.
+     Transferring authorship will remove your ability to edit content!</p>
+
+  <form id="authorTransferForm" action="{% url 'project_authors' project.slug %}" method="post" class="no-pd">
+    {% csrf_token %}
+    {% include "inline_form_snippet.html" with form=transfer_author_form %}
+    <button class="btn btn-primary btn-rsp" name="transfer_author" type="submit">Transfer</button>
+  </form>
+  <hr>
+{% endif %}
+
+<!-- Modal for confirming author transfer -->
+<div class="modal fade" id="transfer_author_modal" tabindex="-1" role="dialog" aria-labelledby="transferAuthorshipModalTitle" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="transferAuthorshipModalTitle">Transfer Authorship</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p id="confirmationText">Please confirm that you would like to assign '<span id="project_author"></span>' as the new submitting author.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" id="confirmAuthorTransfer">Transfer</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- End Modal -->
+
+{% endblock %}
+
+{% block local_js_bottom %}
+<script src="{% static 'custom/js/enable-popover.js' %}"></script>
+<script>
+  disableAddButtons();
+</script>
+
+{# Disable submission if not currently editable #}
+{% if not project.author_editable %}
+  <script src="{% static 'custom/js/disable-input.js' %}"></script>
+{% endif %}
+
+{% if is_submitting %}
+  <script src="{% static 'project/js/transfer-author.js' %}"></script>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,31 @@
+<section id="overview">
+  <h2>Overview</h2>
+<p>
+This page displays an alphabetical list of all the databases on {{ SITE_NAME }}. To search content on {{ SITE_NAME }}, <a href="{% url 'content_index' %}?types=0">visit the search page</a>. Enter the search terms, add a filter for resource type if needed, and select how you would like the results to be ordered (for example, by relevance, by date, or by title).</p>
+<p>Each project is made available under one of the following access policies:</p>
+<ul>
+  <li>Open Access: Accessible by all users, with minimal restrictions on reuse.</li>
+  <li>Restricted Access: Accessible by registered users who sign a Data Use Agreement.</li>
+  <li>Credentialed Access: Accessible by registered users who complete the <a href="{% url 'edit_credentialing' %}">credentialing process</a> and sign a Data Use Agreement.</li>
+</ul>
+</section>
+
+<br>
+<hr>
+
+{% for i, group in projects.items %}
+  <h2 id="{{ group.policy|lower }}">{{ group.policy }} databases</h2>
+    <ul>
+      {% for p in group.projects %}
+        <li><a href="{% url 'published_project_latest' p.slug %}">{{ p.title }}</a>:
+          {% if p.short_description %}
+            {{ p.short_description }}
+        {% else %}
+          {{ p.abstract_text_content|truncatechars_html:200 }}
+          {% endif %}
+        </li>
+      {% empty %}
+        <li>No databases available.</li>
+      {% endfor %}
+    </ul>
+{% endfor %}

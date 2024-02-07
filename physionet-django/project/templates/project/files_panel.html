@@ -1,0 +1,90 @@
+{# Note: This template is obsolescent. Use files_panel_v2 instead. #}
+<div class="card-header">
+  Folder Navigation:
+  {% spaceless %}
+    <span class="dir-breadcrumbs">
+      {% for breadcrumb in dir_breadcrumbs %}
+        {% if forloop.counter == dir_breadcrumbs|length %}
+          <span class="dir-breadcrumb-self">{{ breadcrumb.name }}</span>
+        {% else %}
+          <a href="{{ breadcrumb.rel_path }}#files-panel"
+             onclick="return navigateDir('{{ breadcrumb.full_subdir }}')"
+             class="dir-breadcrumb-up">{{ breadcrumb.name }}</a>
+          <span class="dir-breadcrumb-sep">/</span>
+        {% endif %}
+      {% endfor %}
+    </span>
+  {% endspaceless %}
+</div>
+{% if file_error %}
+<div class="card-body">
+  <div class="alert alert-danger" role="alert">
+    {{ file_error|safe }}
+  </div>
+</div>
+{% else %}
+  {% if file_warning %}
+    <div class="card-body">
+      <div class="alert alert-warning" role="alert">
+        {{ file_warning|safe }}
+      </div>
+    </div>
+  {% endif %}
+<table class="files-panel">
+  <col class="files-panel-name"></col>
+  <col class="files-panel-size"></col>
+  <col class="files-panel-date"></col>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Size</th>
+      <th>Modified</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% if subdir %}
+    <tr class="parentdir">
+      <td><a href="../#files-panel" onclick="return navigateDir('{{ parent_dir|escapejs }}')">Parent Directory</a></td>
+      <td></td>
+      <td></td>
+    </tr>
+  {% endif %}
+  {% for dir in display_dirs %}
+    <tr class="subdir">
+      <td><a href="{{ dir.name }}/#files-panel" onclick="return navigateDir('{{ dir.full_subdir|escapejs }}')">{{ dir.name }}</a></td>
+      <td></td>
+      <td></td>
+    </tr>
+  {% endfor %}
+  {% for file in display_files %}
+    <tr>
+      <td><a href="{{ file.url }}">{{ file.name }}</a>
+        <a class="download" href="{{ file.download_url }}"
+           title="Download {{ file.name }}">
+          <span class="visually-hidden">(download)</span>
+        </a>
+      </td>
+      <td>{{ file.size }}</td>
+      <td>{{ file.last_modified }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+
+<script>
+  // Navigate to another file directory and reload the file panel
+  // subdir is the full subdirectory
+  function navigateDir(subdir){
+    $.ajax({
+            type: "GET",
+            url: "{{ files_panel_url|escapejs }}",
+            data: {'subdir':subdir
+            },
+            success: function reloadSection(result){
+                $("#files-panel").html(result);
+            },
+    });
+    return false
+  }
+</script>

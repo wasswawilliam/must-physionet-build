@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 21.1.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 100 100" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:none;stroke:#000000;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;}
+	.st1{fill:#659943;}
+	.st2{font-family:'Georgia';}
+	.st3{font-size:18px;}
+	.st4{fill:none;stroke:#659943;stroke-width:0.25;stroke-miterlimit:10;}
+</style>
+<font horiz-adv-x="2048">
+<!-- Georgia is either a registered trademark or a trademark of Microsoft Corporation in the United States and/or other countries. -->
+<!-- Copyright: Copyright 2018 Adobe System Incorporated. All rights reserved. -->
+<font-face font-family="Georgia" units-per-em="2048" underline-position="-181" underline-thickness="101"/>
+<missing-glyph horiz-adv-x="2048" d="M256,0l0,1536l1536,0l0,-1536M384,128l1280,0l0,1280l-1280,0z"/>
+<glyph unicode="N" horiz-adv-x="1571" d="M1554,1348C1535,1347 1507,1342 1468,1332C1429,1322 1402,1312 1385,1301C1361,1284 1345,1252 1337,1205C1328,1158 1324,1098 1324,1025l0,-1039l-87,0l-860,1161l0,-732C377,333 382,270 393,226C403,182 419,151 440,132C455,117 487,104 535,91C583,78 615,72 630,71l0,-71l-582,0l0,71C66,72 96,79 139,91C182,102 208,113 219,122C242,141 258,169 267,208C276,246 280,311 280,404l0,699C280,1134 275,1164 264,1195C253,1226 239,1249 221,1266C197,1288 165,1307 124,1323C83,1338 49,1347 24,1348l0,71l405,0l798,-1082l0,675C1227,1095 1222,1158 1211,1203C1200,1247 1185,1276 1165,1291C1146,1304 1116,1316 1074,1328C1031,1340 999,1347 977,1348l0,71l577,0z"/>
+<glyph unicode="P" horiz-adv-x="1249" d="M1184,1069C1184,995 1170,930 1141,873C1112,816 1071,768 1020,731C969,694 914,666 853,649C792,632 728,623 660,623l-159,0l0,-430C501,170 505,149 513,132C520,114 536,100 560,91C572,86 593,82 624,78C654,74 682,72 707,71l0,-71l-609,0l0,71C114,72 137,75 168,78C198,81 219,86 231,91C251,100 266,112 275,129C284,146 288,167 288,193l0,1024C288,1240 285,1261 278,1280C271,1299 256,1313 231,1322C206,1331 181,1337 156,1341C131,1344 109,1347 91,1348l0,71l648,0C871,1419 978,1387 1061,1324C1143,1260 1184,1175 1184,1069M880,827C903,859 918,892 925,927C932,961 936,992 936,1019C936,1057 932,1096 923,1135C914,1174 898,1209 876,1238C853,1269 822,1294 784,1311C746,1328 699,1337 642,1337l-141,0l0,-627l102,0C675,710 734,721 779,744C824,766 857,794 880,827z"/>
+</font>
+
+	<g id="lines">
+	<path class="st0" d="M2,26.8c0.7-0.8,1.8-2.7,3.9,0h1.4l0.6,1.8C8,28.3,9.3,2.9,9.3,2.9c0.3,2.7,0.9,25.6,1.1,26.6l1.2-2.7h3.6
+		c4.8-6.5,6.5-8.7,12.4-1.1c0.6,0.8,4.4,1.2,8.5,1.2"/>
+</g>
+<g id="text">
+	<text transform="matrix(1 0 0 1 12.1715 17.0154)" class="st1 st2 st3">P</text>
+	<text transform="matrix(1 0 0 1 12.1715 17.0154)" class="st4 st2 st3">P</text>
+	<text transform="matrix(1 0 0 1 24.0715 20.0154)" class="st1 st2 st3">N</text>
+	<text transform="matrix(1 0 0 1 24.0715 20.0154)" class="st4 st2 st3">N</text>
+</g>
+</svg>

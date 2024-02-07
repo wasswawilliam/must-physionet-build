@@ -1,0 +1,33 @@
+{% extends "console/base_console.html" %}
+
+{% load static %}
+
+{% block title %}Project Submission Info - {{ project }}{% endblock %}
+
+{% block local_css %}
+<link rel="stylesheet" type="text/css" href="{% static 'project/css/submission-timeline.css' %}">
+{% endblock %}
+
+{% block local_js_top %}
+<script src="{% static 'custom/js/copy-to-clipboard.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+<h1>Project Submission Info - {{ project }}</h1>
+<hr>
+{% include "console/submission_info_card.html" %}
+<p>
+<a href="{% url 'editor_home' %}">Return to editor home</a></p>
+<p><a href="{% url 'submitted_projects' %}">Return to submitted projects</a></p>
+{% endblock %}
+
+{% block local_js_bottom %}
+<script src="{% static 'custom/js/enable-popover.js' %}"></script>
+{% if project.editor == user %}
+<script>
+  function set_editor_text(){
+    $('#project_editor').text($( "#id_editor option:selected" ).text());
+  }
+</script>
+{% endif %}
+{% endblock %}

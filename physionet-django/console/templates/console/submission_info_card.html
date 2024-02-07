@@ -1,0 +1,218 @@
+{% load project_templatetags %}
+<div class="card mb-3">
+  <div class="card-header">
+    <ul class="nav nav-tabs card-header-tabs">
+      <li class="nav-item">
+        <a class="nav-link {% if not passphrase %} active {% endif %}" id="info-tab" data-toggle="tab" href="#info" role="tab" aria-controls="info" aria-selected="true">Project Information</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" id="timeline-tab" data-toggle="tab" href="#timeline" role="tab" aria-controls="timeline" aria-selected="false">Submission Timeline</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" id="ethics-tab" data-toggle="tab" href="#ethics" role="tab" aria-controls="timeline" aria-selected="false">Ethics</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link {% if passphrase %} active {% endif %}" id="anonymous-tab" data-toggle="tab" href="#anonymous" role="tab" aria-controls="anonymous" aria-selected="false">Anonymous Access</a>
+      </li>
+      {% if project.editor == user %}
+      <li class="nav-item">
+        <a class="nav-link {% if passphrase %} active {% endif %}" id="reassign-tab" data-toggle="tab" href="#reassign" role="tab" aria-controls="reassign" aria-selected="false">Assign new editor</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link {% if passphrase %} active {% endif %}" id="embargo-tab" data-toggle="tab" href="#embargo" role="tab" aria-controls="reassign" aria-selected="false">Embargo</a>
+      </li>
+      {% endif %}
+      {% if project.submission_status >= SubmissionStatus.NEEDS_COPYEDIT %}
+      <li class="nav-item">
+        <a class="nav-link" id="doi-tab" data-toggle="tab" href="#doi" role="tab" aria-controls="timeline" aria-selected="false">DOIs</a>
+      </li>
+      {% endif %}
+    </ul>
+  </div>
+  <div class="card-body">
+    <div class="tab-content">
+      {# Project Information #}
+      <div class="tab-pane fade {% if not passphrase %} show active {% endif %}" id="info" role="tabpanel" aria-labelledby="info-tab">
+        <p>{{ project.resource_type.id|resource_badge|safe }} {{ project.access_policy|access_badge|safe }}</p>
+        <h4 class="card-title">{{ project.title }}</h4>
+        <p class="card-text">
+          Authors: {% for author in authors %}{{ author|show_all_author_info|safe }} {% endfor %}<br>
+          Created: {{ project.creation_datetime|date }}. Submitted: {{ project.submission_datetime|date }}.<br>
+          Storage Used: {{ storage_info.readable_used }} / {{ storage_info.readable_allowance }}<br>
+          Version: {{ project.version }}
+          {% if project.is_new_version %}<br>Latest Published Version: <a href="{% url 'published_project' latest_version.slug latest_version.version %}" target="_blank">{{ latest_version.version }}</a>{% endif %}
+          {% if project.latest_reminder %}
+            <br>Latest reminder email sent on: {{ project.latest_reminder }}
+          {% endif %}
+          {% if project.license.access_policy == AccessPolicy.OPEN %}
+            <br> Embargo: cannot be set on an open access project
+          {% elif project.embargo_files_days%}
+            <br> Embargo: set for {{ project.embargo_files_days }} day{{ project.embargo_files_days|pluralize }} after publication
+          {% else %}
+            <br>Embargo: none
+          {% endif %}
+        </p>
+        <p class="card-text">
+          Description: {{ project.short_description }}
+        </p>
+        <p><a class="btn btn-lg btn-primary" href="{% url 'project_preview' project.slug %}?Admin=True" role="button">
+          View Project Preview</a>
+          <button class="btn btn-lg btn-primary" onclick="copyToClipboard('{{ author_emails }}')">Copy Author Emails</button>
+        </p>
+        {% if user == project.editor or user.has_access_to_admin_console %}
+        <p>To Download all the files use this command:<br>wget -r -N -c -np --user {{ user }} --ask-password {{ bulk_url_prefix }}{% url 'serve_active_project_file_editor' project.slug '' %}</p>
+        {% endif %}
+      </div>
+
+      {# Submission Timeline #}
+      <div class="tab-pane fade" id="timeline" role="tabpanel" aria-labelledby="timeline-tab">
+        {% include "project/active_submission_timeline.html" %}
+      </div>
+      {# Ethics #}
+      <div class="tab-pane fade" id="ethics" role="tabpanel" aria-labelledby="timeline-tab">
+        <h5 class="card-title">Ethics statement</h5>
+        <p class="card-text">{{ project.ethics_statement|safe }}</p>
+        <h5>Uploaded Documents</h5>
+        {% if project.uploaded_documents.all %}
+          {% for uploaded_document in project.uploaded_documents.all %}
+            <p class="card_text"><a href="{% url 'serve_document' uploaded_document.document|filename %}" target="_blank">{{ uploaded_document.document_type }}</a></p>
+          {% endfor %}
+        {% else %}
+          <p class="card_text">No documents were provided.</p>
+        {% endif %}
+      </div>
+      {# Anonymous Access #}
+      <div class="tab-pane fade {% if passphrase %} show active {% endif %}" id="anonymous" role="tabpanel" aria-labelledby="anonymous-tab">
+        <p>
+          You can generate a passphrase that will allow anonymous access to the
+          <i><a href="{% url 'project_preview' project.slug %}" target="_blank">preview</a></i> of this project.
+          This is useful if the authors are submitting an article to a peer-reviewed journal and access
+          to a {{ SITE_NAME }} resource is needed during the review process.
+          <br>
+          {% if anonymous_url %}
+            The URL for reviewer access is:
+            <a href="{% url 'anonymous_login' anonymous_url %}" target="_blank">{{ url_prefix }}{% url 'anonymous_login' anonymous_url %}</a>
+          {% endif %}
+        </p>
+        <div
+          {% if not passphrase or passphrase == "revoked" %}
+            class="alert alert-danger">
+            <p class='m-0'>Note: When providing anonymous access to third parties, keep in mind that any changes made during
+              the {{ SITE_NAME }} review process will impact anyone viewing the project through that access.</p>
+          {% else %}
+            class="alert alert-success">
+            Passphrase: {{ passphrase }}
+          {% endif %}
+        </div>
+        <form action="{% url 'submission_info' project.slug %}" method="POST" id="passphrase_form">
+          {% csrf_token %}
+          {% if not project.anonymous.first %}
+          <button class="btn btn-primary btn-rsp" type="submit" name="generate_passphrase">
+            Grant access
+          </button>
+          {% else %}
+          <button class="btn btn-danger btn-rsp" type="submit" name="remove_passphrase">
+            Revoke access
+          </button>
+          {% endif %}
+        </form>
+      </div>
+
+      {# Permanent Reassign #}
+      {% if project.editor == user %}
+      <div class="tab-pane fade" id="reassign" role="tabpanel" aria-labelledby="reassign-tab">
+        <p>Permanently reassign the project to another editor.</p>
+        <form action="{% url 'submission_info' project.slug %}" method="POST" id="reassign_editor_form">
+          {% csrf_token %}
+          {% include "form_snippet.html" with form=reassign_editor_form %}
+          <br>
+          <button class="btn btn-primary btn-rsp" type="button" data-toggle="modal" data-target="#reassign_editor_modal">Reassign</button>
+
+          <!-- Start Modal -->
+          <div class="modal fade" id="reassign_editor_modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="exampleModalLongTitle">Editor Reassignment</h5>
+                </div>
+                <div class="modal-body">
+                  <p>Please confirm you want to assign '<span id="project_editor"></span>' as the new project editor of {{ project }}</p>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                  <button type="submit" class="btn btn-primary" name="reassign_editor">Save changes</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        <!-- End Modal -->
+        </form>
+      </div>
+      {% endif %}
+
+      {# Embargo #}
+      {% if project.editor == user %}
+      <div class="tab-pane fade" id="embargo" role="tabpanel" aria-labelledby="embargo-tab">
+        {% if not project.license.access_policy == AccessPolicy.OPEN %}
+          {% if project.embargo_files_days %}
+            <p>The embargo, as set currently, will hide the files in this project version for <b>{{ project.embargo_files_days }} day{{ project.embargo_files_days|pluralize }}</b> after publication.</p>
+            <button class="btn btn-primary btn-rsp" type="button" data-toggle="modal" data-target="#embargo_modal">Update embargo</button>
+          {% else %}
+            <p>Embargo the files in this project version. </p>
+            <button class="btn btn-primary btn-rsp" type="button" data-toggle="modal" data-target="#embargo_modal">Embargo files</button>
+          {% endif %}
+
+
+            <!-- Start Modal -->
+            <div class="modal fade" id="embargo_modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
+              <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLongTitle">Embargo files</h5>
+                  </div>
+                  <form action="{% url 'submission_info' project.slug %}" method="POST" id="embargo_form">
+                    <div class="modal-body">
+                      <p>Enter the number of days to embargo the files from the publication date in "{{ project }}". Click to confirm that you want to embargo the files.</p>
+                        {% csrf_token %}
+                        {% include "form_snippet_no_labels.html" with form=embargo_form %}
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                      <button type="submit" class="btn btn-primary" name="embargo_files">Embargo files</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+        {% else %}
+              The files for an open access project cannot be placed under embargo.
+        {% endif %}
+      </div>
+      {% endif %}
+
+      {# Draft DOI #}
+      <div class="tab-pane fade" id="doi" role="tabpanel" aria-labelledby="doi-tab">
+        <p>The following DOIs have been registered for the project. These may be useful 
+          if a formal citation is required in advance of publication (for example, if the 
+          project is being announced in a press release or cited in paper). DOIs will 
+          become active when the project is published.</p>
+        <div class="alert alert-success">
+          <strong>Core project (Latest version)</strong>: 
+          {% if project.core_project.doi %}
+          https://doi.org/{{ project.core_project.doi }}
+          {% else %}
+          The core project does not have a DOI.
+          {% endif %}
+          <br />
+          <strong>This version (version {{ project.version }})</strong>:
+          {% if project.doi %}
+          https://doi.org/{{ project.doi }}
+          {% else %}
+          The project version does not have a DOI.
+          {% endif %}
+        </div>
+      </form>
+      </div>
+    </div>
+  </div>
+</div>

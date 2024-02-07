@@ -1,0 +1,286 @@
+{% load static %}
+
+{% block local_js_top %}
+<script src="{% static 'dropzone/dropzone.min.js' %}"></script>
+{% endblock %}
+
+{% block local_css %}
+<link rel="stylesheet" type="text/css" href="{% static 'dropzone/dropzone.min.css' %}">
+{% endblock %}
+
+<div id="forms-and-panel">
+  {% if storage_type  != "GCP" %}
+  <form method="post" enctype="multipart/form-data" onsubmit="check_upload_size_limit('submit')">
+  {% else %}
+    <form method="post" enctype="multipart/form-data">
+  {% endif %}
+    {% csrf_token %}
+    {% include "project/project_files_form.html" %}
+    <div id="files-panel" class="card">
+      <div class="card-header">
+        Folder Navigation:
+        {% spaceless %}
+          <span class="dir-breadcrumbs">
+            {% for breadcrumb in dir_breadcrumbs %}
+              {% if forloop.counter == dir_breadcrumbs|length %}
+                <span class="dir-breadcrumb-self">{{ breadcrumb.name }}</span>
+              {% else %}
+                <a href="{{ breadcrumb.rel_path }}#files-panel"
+                   onclick="return navigateDir('{{ breadcrumb.full_subdir|escapejs }}')"
+                   class="dir-breadcrumb-up">{{ breadcrumb.name }}</a>
+                <span class="dir-breadcrumb-sep">/</span>
+              {% endif %}
+            {% endfor %}
+          </span>
+        {% endspaceless %}
+      </div>
+      {% if file_error %}
+      <div class="card-body">
+        <div class="alert alert-danger" role="alert">
+          {{ file_error|safe }}
+        </div>
+      </div>
+      {% else %}
+        {% if file_warning %}
+          <div class="card-body">
+            <div class="alert alert-warning" role="alert">
+              {{ file_warning|safe }}
+            </div>
+          </div>
+        {% endif %}
+      <table class="files-panel">
+        <col class="files-panel-name"></col>
+        <col class="files-panel-size"></col>
+        <col class="files-panel-date"></col>
+        <col class="files-panel-checkbox"></col>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Size</th>
+            <th>Modified</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+        {% if subdir %}
+          <tr class="parentdir">
+            <td><a href="../#files-panel" onclick="return navigateDir('{{ parent_dir|escapejs }}')">Parent Directory</a></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </li>
+        {% endif %}
+        {% for dir in display_dirs %}
+          <tr class="subdir">
+            <td><a href="{{ dir.name }}/#files-panel" onclick="return navigateDir('{{ dir.full_subdir|escapejs }}')">{{ dir.name }}</a></td>
+            <td></td>
+            <td></td>
+            <td>{% if files_editable %}<input type="checkbox" name="items" value="{{ dir.name }}" onchange="countSelected(this)">{% endif %}</td>
+          </tr>
+        {% endfor %}
+        {% for file in display_files %}
+          <tr>
+            <td><a href="{{ file.url }}?return=files">{{ file.name }}</a></td>
+            <td>{{ file.size }}</td>
+            <td>{{ file.last_modified }}</td>
+            <td>{% if files_editable %}<input type="checkbox" name="items" value="{{ file.name }}" onchange="countSelected(this)">{% endif %}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      {% endif %}
+    </div>
+  </form>
+
+  <script>
+    $(document).ready(() => {
+      const dropzoneObj = {
+            method: 'PUT',
+            createImageThumbnails: false,
+            maxFiles: 2000,
+            maxFilesize: 10000,
+            parallelUploads: 1,
+            timeout: null,
+            headers: {
+                'Cache-Control': null,
+                'X-Requested-With': null,
+                'Accept': null,
+            },
+            url: files => files[0].dynamicUploadUrl,
+            sending: (file, xhr, formData) => {
+                xhr.setRequestHeader("X-Upload-Content-Length", file.size);
+                xhr.setRequestHeader("Content-Type", file.type);
+
+                let _send = xhr.send;
+                xhr.send = function () {
+                    _send.call(xhr, file);
+                };
+            },
+            accept: (file, done) => {
+                const payload = {size: file.size, filename: "{{ subdir|escapejs }}/" + file.upload.filename, csrfmiddlewaretoken: "{{ csrf_token }}"};
+
+                $.post("{% url 'generate_signed_url' project_slug=project.slug %}", payload, "json")
+                .done(data => {
+                  file.dynamicUploadUrl = data.url;
+                  done();
+                }).fail(data => {
+                  done(data.responseJSON.detail);
+                });
+            }
+        };
+        $("#myDropzone").addClass("dropzone");
+        $("#myDropzone").dropzone(dropzoneObj);
+    });
+</script>
+
+</div>
+  <script>
+  // Navigate to another file directory and reload the file panel
+  // subdir is the full subdirectory
+  function navigateDir(subdir) {
+    $.ajax({
+            url: "{% url 'project_files_panel' project.slug %}",
+            data: {'subdir': subdir},
+            success: result => {
+                $("#forms-and-panel").html(result);
+            }
+    });
+    return false;
+  }
+
+  // Selected checkboxes
+  n_selected = 0
+
+  // Enables and disables buttons based on selected checkboxes
+  function countSelected(box){
+    if (box.checked){
+      n_selected ++
+    }
+    else{
+      n_selected --
+    }
+
+    if (n_selected > 0){
+      if (n_selected == 1){
+        document.getElementById("rename-item-button").disabled = false
+      }
+      else{
+        document.getElementById("rename-item-button").disabled = true
+      }
+      document.getElementById("move-items-button").disabled = false
+      document.getElementById("delete-items-button").disabled = false
+    }
+    else{
+      document.getElementById("rename-item-button").disabled = true
+      document.getElementById("move-items-button").disabled = true
+      document.getElementById("delete-items-button").disabled = true
+    }
+  }
+
+
+  // Direct each input's 'enter' submit function to the right button.
+  // Needed due to form sharing of all item manipulation inputs.
+  {% if storage_type != "GCP" %}
+  document.getElementById("id_file_field").addEventListener("keydown", function(event){
+      if (event.keyCode === 13) {
+        event.preventDefault()
+        document.getElementById("upload-files-button-submit").click()
+      }
+  });
+  {% endif %}
+  document.getElementById("id_folder_name").addEventListener("keydown", function(event){
+      if (event.keyCode === 13) {
+        event.preventDefault()
+        document.getElementById("create-folder-button-submit").click()
+      }
+  });
+  document.getElementById("id_new_name").addEventListener("keydown", function(event){
+      if (event.keyCode === 13) {
+        event.preventDefault()
+        document.getElementById("rename-item-button-submit").click()
+      }
+  });
+  document.getElementById("id_destination_folder").addEventListener("keydown", function(event){
+      if (event.keyCode === 13) {
+        event.preventDefault()
+        document.getElementById("move-items-button-submit").click()
+      }
+  });
+
+
+  function setInputRequirements(required_id){
+    // Make one of the item manipulating form inputs required, and
+    // remove it from all others.
+    let input_ids = ["id_folder_name", "id_new_name", "id_destination_folder"]
+    {% if storage_type != "GCP" %}
+      input_ids.append("id_file_field")
+    {% endif %}
+
+    input_ids.map(element => (
+      document.getElementById(element).required = element === required_id
+    ))
+  }
+
+  // These prepare functions are activated before triggering the modals
+  function prepareUpload(){
+    {% if storage_type != "GCP" %}
+    setInputRequirements("id_file_field")
+    {% endif %}
+  }
+
+  function prepareCreate(){
+    setInputRequirements("id_folder_name")
+  }
+
+  function prepareRename(){
+    setInputRequirements("id_new_name")
+    var itemName = document.querySelector('input[type="checkbox"]:checked').value
+    document.getElementById("rename-item-message").innerHTML = "Selected item: <strong>"+ itemName + "</strong>"
+  }
+
+  function prepareMove(){
+    setInputRequirements("id_destination_folder")
+    document.getElementById("move-items-message").innerHTML = "Move "+ n_selected + " selected item(s)."
+  }
+
+  function prepareDelete(){
+    setInputRequirements("")
+    document.getElementById("delete-items-message").innerHTML = "Are you sure you wish to delete the "+ n_selected + " selected item(s)?"
+  }
+
+  function check_upload_size_limit(stage){
+    // Check the size of the files to be uploaded and stop the form if the file
+    // size exceeds the maximum allowed.
+
+    // The size is calculated in bytes
+    files = $('#id_file_field').get(0).files;
+    let size = 0;
+    // Add the size of all the files into a single variable
+    for (let i = 0; i < files.length; i++)
+    {
+      size = size + files[i].size;
+    }
+    // Check against the remaining quota
+    if (size >= {{ storage_info.remaining }}){
+      // Disable the submit button on the form
+      $('#upload-files-button-submit').attr("disabled", true);
+      // Set the size in the message to be shwon
+      $('#data_size').text(readableBytes(size))
+      // Show the message
+      $('#error_data_size').show();
+    }
+    else{
+      // Hide the message
+      $('#error_data_size').hide();
+      // Enable the submit button on the form
+      $('#upload-files-button-submit').attr("disabled", false);
+    }
+  }
+
+function readableBytes(bytes) {
+    // Return the size of given bytes in a readable format
+    var i = Math.floor(Math.log(bytes) / Math.log(1024)),
+    sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+    return (bytes / Math.pow(1024, i)).toFixed(2) * 1 + ' ' + sizes[i];
+}
+</script>

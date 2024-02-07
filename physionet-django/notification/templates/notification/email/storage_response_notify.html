@@ -1,0 +1,15 @@
+{% load i18n %}{% autoescape off %}{% filter wordwrap:70 %}
+{{ project_info }}
+
+Dear {{ name }},
+
+Your {{ allowance }}GB storage request for the project entitled "{{ project.title }}" has been {{ response }}.
+{% if response_message %}
+The following message was included:
+"{{ response_message }}"
+{% endif %}
+
+{{ signature }}
+
+{{ footer }}
+{% endfilter %}{% endautoescape %}

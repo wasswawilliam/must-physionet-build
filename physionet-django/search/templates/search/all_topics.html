@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% load project_templatetags %}
+
+{% block title %}
+{{ SITE_NAME }} Topics
+{% endblock %}
+
+{% load static %}
+
+{% block local_css %}
+<link rel="stylesheet" type="text/css" href="{% static 'custom/css/form-control-input.css' %}"/>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h1>{{ SITE_NAME }} Topics</h1>
+  <hr>
+  <p>Here are all the keyword topics that tag published {{ SITE_NAME }} projects.</p>
+  </p>
+  <p>
+    {% for topic in topics %}
+      {{ topic|topic_badge:"include_count=True"|safe }}
+    {% endfor %}
+  </p>
+  <br>
+</div>
+{% endblock %}

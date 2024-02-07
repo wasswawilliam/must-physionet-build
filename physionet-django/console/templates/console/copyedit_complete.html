@@ -1,0 +1,14 @@
+{% extends "console/base_console.html" %}
+
+{% block title %}Copyedit Complete{% endblock %}
+
+{% block content %}
+<div class="card mb-3">
+  <div class="card-header">
+    Copyedit Complete
+  </div>
+  <div class="card-body">
+    <p>You have finished copyediting the project: {{ project.title }}. All authors must approve the final state of the project before you may publish it. You may return to your <a href="{% url 'editor_home' %}">editor home</a>.</p>
+  </div>
+</div>
+{% endblock %}

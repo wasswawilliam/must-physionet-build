@@ -1,0 +1,68 @@
+{% extends "console/base_console.html" %}
+
+{% load static %}
+
+{% block title %}Publish Submission{% endblock %}
+
+{% block local_css %}
+<link rel="stylesheet" type="text/css" href="{% static 'project/css/submission-timeline.css' %}">
+{% endblock %}
+
+{% block local_js_top %}
+<script src="{% static 'custom/js/copy-to-clipboard.js' %}"></script>
+<script>
+  // Check the integrity of the metadata fields and enable/disable the
+  // submission buttons
+  function checkSlug(){
+    $.ajax({
+      url: "{% url 'publish_slug_available' project.slug %}",
+      data: {
+        "desired_slug": this.value
+      },
+      success: function(result){
+        if (result.available){
+          document.getElementById('id_slug').style.borderColor = "green";
+          document.getElementById('publish_submission_button').disabled = false;
+        }
+        else{
+          document.getElementById('id_slug').style.borderColor = "red";
+          document.getElementById('publish_submission_button').disabled = true;
+        }
+      }
+    });
+  }
+</script>
+{% endblock %}
+
+{% block content %}
+<h1>Publish Submission - {{ project.title }}</h1>
+<hr>
+{% include "console/submission_info_card.html" %}
+
+<div class="card mb-3">
+  <div class="card-header">
+    Publish Submission
+  </div>
+  <div class="card-body">
+    <p>
+      {% if publishable %}
+        The project is ready to publish. You may choose a unique slug of lowercase alphanumerics and hyphens, of length 1-{{ max_slug_length }}. Must begin and end with an alphanumeric. Must not contain consecutive hyphens or end with hyphen number.
+      {% else %}
+        Something has gone wrong. The project should be publishable at this point but it is not. Please check it.
+      {% endif %}
+    </p>
+    <form action="" method="post" class="form-signin">
+      {% csrf_token %}
+      {% include "form_snippet.html" with form=publish_form %}
+      <button class="btn btn-success btn-lg" id="publish_submission_button" name="publish_submission" type="submit">Publish Submission</button>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block local_js_bottom %}
+<script src="{% static 'custom/js/enable-popover.js' %}"></script>
+<script>
+  document.getElementById('id_slug').onkeyup = checkSlug;
+</script>
+{% endblock %}

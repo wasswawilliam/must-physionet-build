@@ -1,0 +1,34 @@
+{% extends "console/base_console.html" %}
+
+{% block title %}Submitted training{% endblock %}
+
+{% load console_templatetags %}
+
+{% block content %}
+<div class="card mb-3">
+  <div class="card-header">
+    {{ training.training_type.name }} Training - {{ training.user.get_full_name }} {% include "user/training_badge.html" %}
+  </div>
+  <div class="card-body">
+    <h5 class="card-title">Document details</h5>
+    Report: <a href="{% url 'training_report' training.pk %}" target="_blank">Training report</a><br>
+    Link: {% if training.completion_report_url %}
+           <a href="{{ training.completion_report_url }}" target="_blank">{{ training.completion_report_url }}</a>
+         {% else %} No URL available.
+         {% endif %}<br>
+    <br>
+    <h5 class="card-title">Dates</h5>
+    Submitted: {{ training.application_datetime|date }}<br>
+    Expires: {{ training.valid_datetime|default:"End of the world." }}<br>
+    <br>
+    <h5 class="card-title">Reviewer</h5>
+    Reviewed: {{ training.process_datetime|date }}<br>
+    Reviewer: {% if training.reviewer %}
+                {{ training.reviewer.get_full_name }} ({{ training.reviewer.username|default:"" }})
+              {% else %} Reviewer not recorded.
+              {% endif %}<br>
+    Comments: {{ training.reviewer_comments|default:"No comments." }}
+  </div>
+</div>
+<br>
+{% endblock %}

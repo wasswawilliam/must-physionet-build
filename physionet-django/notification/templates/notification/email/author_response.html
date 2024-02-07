@@ -1,0 +1,11 @@
+{% load i18n %}{% autoescape off %}{% filter wordwrap:70 %}
+{{ project_info }}
+
+Dear {{ name }},
+
+Your invitation to {{ author_email }} to co-author your project entitled "{{ project.title }}", has been {{ response }}.
+
+{{ signature }}
+
+{{ footer }}
+{% endfilter %}{% endautoescape %}

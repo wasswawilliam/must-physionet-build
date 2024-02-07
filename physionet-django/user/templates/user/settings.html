@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% load static %}
+
+{% load user_templatetags %}
+
+{% block local_css %}
+<link rel="stylesheet" type="text/css" href="{% static 'custom/css/settings.css' %}"/>
+{% endblock %}
+
+
+{% block content %}
+<div class="container">
+  <div class="row row-offcanvas row-offcanvas-right">
+    {% settings_tabs sso_enabled %}
+    <div class="col-10 col-md-9 sett-side">
+      {% include "message_snippet.html" %}
+      {% block main_content %}
+      {% endblock %}
+    </div><!--/span-->
+
+  </div><!--/row-->
+
+
+</div><!--/.container-->
+{% endblock %}
+
+
+{% block local_js_bottom %}
+<script src="{% static 'bootstrap/js/offcanvas.js' %}"></script>
+<script src="{% static 'zxcvbn/zxcvbn.js' %}"></script>
+<script src="{% static 'zxcvbn/zxcvbn-bootstrap-strength-meter.js' %}"></script>
+<script id="helper" src="{% static 'zxcvbn/zxcvbn_ProgressBar_Change.js' %}" data-last='{{user.profile.last_name}}' data-name='{{user.profile.first_names}}' data-username='{{user.username}}' data-email='{{user.email}}'></script>
+{% endblock %}

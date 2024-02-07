@@ -1,0 +1,11 @@
+{% load i18n %}{% autoescape off %}{% filter wordwrap:70 %}
+{{ project_info }}
+
+Dear {{ name }},
+
+Thank you for submitting your project entitled "{{ project.title }}" to {{ SITE_NAME }}. You will be notified when an editor is assigned to your project.
+
+{{ signature }}
+
+{{ footer }}
+{% endfilter %}{% endautoescape %}

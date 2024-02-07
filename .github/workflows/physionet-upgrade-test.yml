@@ -1,0 +1,70 @@
+name: Debian / Upgrade Test
+
+on:
+  push:
+    branches:
+      - dev
+  pull_request:
+    branches:
+      - dev
+
+jobs:
+  testupgrade:
+    name: Upgrade Test
+    runs-on: ubuntu-latest
+    container: ${{ matrix.container }}
+    strategy:
+      matrix:
+        container: ['debian:11', 'debian:12']
+    steps:
+      - name: Install dependencies
+        run: |
+          apt-get update --yes
+          apt-get install --yes \
+                  build-essential \
+                  flake8 \
+                  git \
+                  libcap-dev \
+                  libffi-dev \
+                  libflac-dev \
+                  libpq-dev \
+                  libseccomp-dev \
+                  python3-dev \
+                  sudo \
+                  virtualenv \
+                  wget \
+                  zip
+
+      - name: Check out repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Mark git repository as trusted
+        run: |
+          git config --global --add safe.directory $(pwd)
+
+      - name: Install WFDB
+        run: |
+          wget https://github.com/bemoody/wfdb/archive/10.7.0.tar.gz \
+               -O wfdb.tar.gz
+          tar -xf wfdb.tar.gz
+          (cd wfdb-* && ./configure --without-netfiles)
+          make -C wfdb-*/lib install
+          make -C wfdb-*/data install
+          ldconfig
+
+      - name: Install lightwave
+        run: |
+          wget https://github.com/bemoody/lightwave/archive/0.72.tar.gz \
+               -O lightwave.tar.gz
+          tar -xf lightwave.tar.gz
+          (cd lightwave-* && make CGIDIR=/usr/local/bin sandboxed-server)
+
+      - name: Create .env file
+        run: |
+          ln -sT .env.example .env
+
+      - name: Test PhysioNet server setup and upgrade
+        run: |
+          ./test-upgrade.sh -v origin/production

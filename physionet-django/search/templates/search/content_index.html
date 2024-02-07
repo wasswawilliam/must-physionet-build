@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+{{ SITE_NAME }} Index
+{% endblock %}
+
+{% block local_css %}
+<link rel="stylesheet" type="text/css" href="{% static 'search/css/content-index.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'custom/css/form-control-input.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'custom/css/pagination.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="main">
+  <div class="main-side">
+    <form method="GET" action="" class="">
+      <div class="card">
+        <h2 class="card-header">Search</h2>
+        <div class="card-body no-pd search-card">
+            {% include "inline_form_snippet.html" with form=form_topic %}
+            <div class="search-options">
+              <div class="sort">
+                  <label>Sort by</label>
+                  {% include "inline_form_snippet.html" with form=form_order %}
+              </div>
+              <div class="resource">
+                <label for='resource-check'>
+                  Resource type
+                  <span class="nselected">&nbsp;</span>
+                </label>
+                <input type="checkbox" id="resource-check">
+                {% include "inline_form_snippet.html" with form=form_type %}
+              </div>
+            </div>
+            <hr>
+            <button class="btn btn-primary btn-rsp" type="submit">Apply</button>
+        </div>
+      </div>
+    </form>
+    </div><div class="main-content">
+      <h1>Resources</h1>
+      <br>
+      {% if projects|length < 1 %} No results {% endif %}
+      {% include "search/content_list.html" %}
+
+      {% include "console/pagination.html" with pagination=projects %}
+
+    </div>
+</div>
+{% endblock %}
+
+{% block local_js_bottom %}
+<script>
+  $("#resource-check").change(function() {
+    $(document).click(function(e){
+      if ($('.resource').is(e.target) || $('.resource').has(e.target).length > 0) return; 
+      $('#resource-check').prop("checked", false);
+      $(document).off('click');
+    })
+  });
+
+  $(".nselected").html($('.resource .row input:checked').length + ' selected');
+  $(".resource .row input").click(function(){
+    $('.nselected').html($('.resource .row input:checked').length + ' selected')
+  });
+
+  $('#selectall').click(function(){ $('#type-check').find('input').prop('checked', true); return false; });
+</script>
+{% endblock %}

@@ -1,0 +1,13 @@
+{% load i18n %}{% autoescape off %}{% filter wordwrap:70 %}
+{{ project_info }}
+
+Dear {{ name }},
+
+The project entitled "{{ project.title }}" has been submitted to {{ SITE_NAME }}. {% if project.author_comments %}The author included the following comment with the submission: 
+
+{{ project.author_comments }}{% endif %}
+
+{{ signature }}
+
+{{ footer }}
+{% endfilter %}{% endautoescape %}

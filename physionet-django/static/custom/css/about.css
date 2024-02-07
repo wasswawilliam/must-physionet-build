@@ -1,0 +1,18 @@
+#form .col-md-12{
+	padding: 0;
+}
+
+.card ul{
+	list-style: none;
+	padding: 0;
+}
+
+.card ul li{
+	padding: 10px;
+}
+
+/* nested list */
+
+.card ul ul a {
+    padding-left: 20px;
+}

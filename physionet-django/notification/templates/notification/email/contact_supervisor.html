@@ -1,0 +1,19 @@
+{% load i18n %}{% autoescape off %}{% filter wordwrap:70 %}
+Dear {{ application.reference_name }},
+
+{{ applicant_name }} is applying for credentialed access to {{ SITE_NAME }}, the website for sharing biomedical data. He/she has listed you as his/her supervisor and has summarized the research project as follows:
+
+{{application.research_summary}}
+
+Are you {{ applicant_name }}'s supervisor for this project, and is the summary accurate?
+
+If you support this application for credentialed access, please indicate your approval using the link below. If you do not support their application, please ignore this email or update us directly via the link.
+
+{% if application.reference_verification_token  %}
+{{ url_prefix }}{% url 'credential_reference_verification' application.slug application.reference_verification_token %}
+{% else %}
+{{ url_prefix }}{% url 'credential_reference' application.slug %}
+{% endif %}
+
+{{ signature }}
+{% endfilter %}{% endautoescape %}

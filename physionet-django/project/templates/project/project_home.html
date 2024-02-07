@@ -1,0 +1,259 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% load project_templatetags %}
+
+{% block title %}Project Home{% endblock %}
+
+{% block local_css %}
+<link rel="stylesheet" type="text/css" href="{% static 'project/css/project-home.css' %}">
+{% endblock %}
+
+{% block local_js_bottom %}
+  <script src="{% static 'project/js/project_home.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  {% include "message_snippet.html" %}
+  <div class="jumbotron">
+    <h1>Project Home</h1>
+    <p class="lead">Here you can create projects, access projects you are authoring, and respond to author invitations.</p>
+    <p>
+      <a id="create_project" class="btn btn-success" href="{% url 'create_project' %}" role="button">
+        <i class="fa fa-cloud-upload-alt"></i> Create New Project
+      </a>
+    </p>
+  </div>
+
+<!-- Outstanding tasks -->
+{% if pending_revisions|length or invitation_response_formset|length or pending_author_approvals|length or missing_affiliations|length or data_access_requests|length %}
+  <div class="card" >
+    <div class="card-header">
+      <h2>Outstanding Tasks</h2>
+    </div>
+    {# Here is listed all outstanging author invitations #}
+    <ul class="list-group list-group-flush">
+      <li class="list-group-item">
+        <div class="row">
+          <div class="col-md-5"><strong>Project</strong></div>
+          <div class="col-md-3"><strong>Pending Task</strong></div>
+          <div class="col-md-2"><strong>Date</strong></div>
+          <div class="col-md-2"></div>
+        </div>
+      </li>    
+    {% if invitation_response_formset|length %}
+      <form action="" method="post">
+        {{ invitation_response_formset.management_form }}
+        {% csrf_token %}
+        {% for invitation_response_form in invitation_response_formset %}
+          <li class="list-group-item">
+            <div class="row">
+              <div class="col-md-5">{{ invitation_response_form.instance.project  }}</div>
+              <div class="col-md-3">Authorship invitation</div>
+              <div class="col-md-2">{{ invitation_response_form.instance.request_datetime|date }}</div>
+              <div class="col-md-2"><button id="respond_button_{{ invitation_response_form.instance.project.id }}" type="button" class="btn btn-sm btn-primary" data-toggle="modal" data-target="#invitation-response-modal-{{ invitation_response_form.instance.id }}">
+                <i class="fa fa-reply"></i> Respond</button>
+              </div>
+            </div>
+          </li>
+          {# The modal for the response #}
+          <div class="modal fade" id="invitation-response-modal-{{ invitation_response_form.instance.id }}" tabindex="-1" role="dialog" aria-labelledby="invitation-response-modal-{{ invitation_response_form.invitation_id.value }}" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title">Respond to invitation</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+
+                <div class="modal-body author_invitation_response_form">
+                  <p>You have been invited to co-author "{{ invitation_response_form.instance.project }}" by {{ invitation_response_form.instance.inviter.get_full_name }}.</p>
+                  {{ invitation_response_form }}
+                  {# Note: the affiliation input field will be shown or #}
+                  {# hidden by update_response() in project_home.js #}
+                </div>
+
+                <div class="modal-footer">
+                  <button class="btn btn-primary" name="invitation_response" value="{{ invitation_response_form.instance.id }}" type="submit"><i class="fa fa-reply"></i> Submit Response</button>
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </form>
+    {% endif %}
+    {% if missing_affiliations|length %}
+      {% for project in missing_affiliations %}
+        <li class="list-group-item">
+          <div class="row">
+            <div class="col-md-5"><a href="{% url 'project_overview' project.0.slug %}">{{ project.0 }}</a></div>
+            <div class="col-md-3">Missing Affiliation</div>
+            <div class="col-md-2">{{ project.1|date }}</div>
+            <div class="col-md-2">
+              <a href="{% url 'project_authors' project.0.slug %}" class="btn btn-sm btn-primary">Add affiliations</a>
+            </div>
+          </div>
+        </li>
+      {% endfor %}
+    {% endif %}
+    {% if pending_revisions|length %}
+      {% for project in pending_revisions %}
+        <li class="list-group-item">
+          <div class="row">
+            <div class="col-md-5"><a href="{% url 'project_overview' project.slug %}">{{ project.title }}</a></div>
+            <div class="col-md-3">Revisions requested</div>
+            <div class="col-md-2">{{ project.revision_request_datetime|date }}</div>
+            <div class="col-md-2">
+              <a href="{% url 'project_submission' project.slug %}" class="btn btn-sm btn-primary">Resubmit project</a>
+            </div>
+          </div>
+        </li>
+      {% endfor %}
+    {% endif %}
+    {% if pending_author_approvals|length %}
+      {% for project in pending_author_approvals %}
+        <li class="list-group-item">
+          <div class="row">
+            <div class="col-md-5"><a href="{% url 'project_overview' project.slug %}">{{ project }}</a></div>
+            <div class="col-md-3">Pending project approval</div>
+            <div class="col-md-2">{{ project.copyedit_completion_datetime|date }}</div>
+            <div class="col-md-2">
+              <a href="{% url 'project_submission' project.slug %}" class="btn btn-sm btn-primary">Approve project</a>
+            </div>
+          </div>
+        </li>
+      {% endfor %}
+    {% endif %}
+    {% if data_access_requests|length %}
+         {% for da_request in data_access_requests %}
+         <li class="list-group-item">
+             <div class="row">
+                 <div class="col-md-5"><a
+                         href="{% url 'published_project' da_request.project.slug da_request.project.version %}">{{ da_request.project.title }} </a>
+                 </div>
+                 <div class="col-md-3">Pending data use request</div>
+                 <div class="col-md-2">{{ da_request.request_datetime|date }}</div>
+                 <div class="col-md-2">
+                     <a class="btn btn-sm btn-primary" href=
+                             "{% url 'data_access_request_view' da_request.project.slug da_request.project.version da_request.id %}"><i class="fa fa-reply"></i>Respond</a>
+                 </div>
+             </div>
+          </li>
+         {% endfor %}
+    {% endif %}
+    </ul>
+  </div>
+  <br>
+{% endif %}
+
+<!-- Active projects -->
+
+  <div class="card" >
+    <div class="card-header">
+      <h2>Active Projects</h2>
+      <p class="card-text">Projects to be published</p>
+    </div>
+
+    <ul class="list-group list-group-flush">
+      {% if projects %}
+        {% for project in projects %}
+          <li class="list-group-item">
+            <p>
+              {{ project.resource_type.id|resource_badge|safe }}
+              {% if project.under_submission %}
+                <span class="badge badge-info">Under Submission</span>
+              {% elif project.submission_days_remaining < 14 %}
+                <span class="badge badge-warning"><i class="far fa-clock"></i> Approaching Submission Deadline</span>
+              {% endif %}
+            </p>
+            <h3><a href="{% url 'project_overview' project.slug %}">{{ project.title }}</a></h3>
+            <p class="list-group-item-text text-muted">
+            <strong>Submitting Author: {{ project.submitting_author.get_full_name }}</strong><br>
+            <small>Created: {{ project.creation_datetime|date }}. Modified: {{ project.modified_datetime|date }}.</small><br>
+            <small>Status: {{ project.submission_status_label }} {% if project.submission_status == SubmissionStatus.UNSUBMITTED %}Deadline: {{ project.submission_deadline|date }}.{% endif %}</small>
+            </p>
+          </li>
+        {% endfor %}
+      {% else %}
+        <div class="card-body text-center">
+          <p class="card-text">No projects to show</p>
+        </div>
+      {% endif %}
+    </ul>
+  </div>
+  <br>
+
+<!-- Published projects -->
+
+  <div class="card" >
+    <div class="card-header">
+      <h2>Published Projects</h2>
+      <p class="card-text">Your published projects</p>
+    </div>
+    <ul class="list-group list-group-flush">
+      {% for project in published_projects %}
+        <li class="list-group-item">
+          <p>
+            {{ project.resource_type.id|resource_badge|safe }}
+            {{ project.access_policy|access_badge|safe }}
+          </p>
+          <h3>
+            <a href="{% url 'published_project' project.slug project.version %}">{{ project.title }}</a>
+              {% if project.access_policy == AccessPolicy.CONTRIBUTOR_REVIEW %}
+                  {% if project.requests_button %}
+                      <a href="{% url 'data_access_requests_overview' project.slug project.version %}"
+                         class="btn btn-primary ml-1" role="button" style="float:right">Requests</a>
+                  {% endif %}
+                  {% if project.manage_reviewers_button %}
+                      <a href="{% url 'manage_data_access_reviewers' project.slug project.version %}" class="btn btn-primary ml-1"
+                         role="button" style="float:right">Manage Reviewers</a>
+                  {% endif %}
+              {% endif %}
+            <a href="{% url 'published_submission_history' project.slug project.version %}" class="btn btn-primary ml-1" role="button" style="float:right">Submission History</a>
+            {% if project.new_button %}
+              <a href="{% url 'new_project_version' project.slug %}" class="btn btn-success ml-1" role="button" style="float:right">New Version</a>
+            {% endif %}
+          </h3>
+          <p class="list-group-item-text text-muted">
+          <strong>Submitting Author: {{ project.submitting_author.get_full_name }}</strong><br>
+          <small>Created: {{ project.creation_datetime|date }}. Published: {{ project.publish_datetime|date }}.</small><br>
+          <small>Version: {{ project.version }}.{% if project.version_order or project.has_other_versions %} <a href="{% url 'published_versions' project.slug %}">See all versions</a>{% endif %}</small>
+          </p>
+
+        </li>
+      {% empty %}
+        <div class="card-body text-center">
+          <p class="card-text">No projects to show</p>
+        </div>
+      {% endfor %}
+    </ul>
+  </div>
+  <br>
+
+  <!-- Closed projects -->
+
+  {% if archived_projects %}
+    <div class="card" >
+      <div class="card-header">
+        <h2>Closed Submissions</h2>
+      </div>
+      <ul class="list-group list-group-flush">
+        {% for project in archived_projects %}
+          <li class="list-group-item">
+            <h3>{{ project }} <a href="{% url 'archived_submission_history' project.slug %}" class="btn btn-primary ml-1" role="button" style="float:right">Submission History</a></h3>
+            <p class="list-group-item-text text-muted">
+            <strong>Submitting Author: {{ project.submitting_author.get_full_name }}</strong><br>
+            <small>Created {{ project.creation_datetime|date }} Closed {{ project.archive_datetime|date }}</small>
+            </p>
+          </li>
+          {% endfor %}
+      </ul>
+    </div>
+  <br>
+  {% endif %}
+</div> <!-- /container -->
+{% endblock %}

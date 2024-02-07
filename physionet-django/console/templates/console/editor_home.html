@@ -1,0 +1,223 @@
+{% extends "console/base_console.html" %}
+
+{% block title %}Editing Submissions{% endblock %}
+
+{% load console_templatetags %}
+
+{% block content %}
+<div class="jumbotron">
+  <h1>Editor Home</h1>
+  <p class="lead">Welcome to your editor home.</p>
+</div>
+
+{# Awaiting editor decision #}
+<div class="card mb-3">
+  <div class="card-header">
+    Awaiting Editor Decision {{ decision_projects|task_count_badge|safe }}
+  </div>
+  <div class="card-body">
+    {% if decision_projects %}
+      <div class="table-responsive">
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>Project</th>
+              <th>Submitting Author</th>
+              <th>Submitted</th>
+              <th>Resubmitted</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for project in decision_projects %}
+            <tr>
+              <td><a href="{% url 'submission_info' project.slug %}">{{ project }}</a></td>
+              <td><a href="{% url 'user_management' project.submitting_author.user.username %}">{{ project.submitting_author }}</a></td>
+              <td>{{ project.submission_datetime|date }}</td>
+              <td>
+                {% if project.resubmission_datetime %}
+                  {{ project.resubmission_datetime|date }}
+                {% else %}
+                  Not a resubmission
+                {% endif %}
+              </td>
+              <td><a class="btn btn-primary btn-sm" href="{% url 'edit_submission' project.slug %}" role="button">Edit Project</a></td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p><i class="fas fa-check" style="color:green"></i> No projects to show.</p>
+    {% endif %}
+  </div>
+</div>
+
+{# Awaiting revisions #}
+<div class="card mb-3">
+  <div class="card-header">
+    Awaiting Author Revisions {{ revision_projects|task_count_badge|safe }}
+  </div>
+  <div class="card-body">
+    {% if revision_projects %}
+      <div class="table-responsive">
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>Project</th>
+              <th>Submitting Author</th>
+              <th>Submitted</th>
+              <th>Revision requested</th>
+              <th>Latest reminder</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for project in revision_projects %}
+            <tr>
+              <td><a href="{% url 'submission_info' project.slug %}">{{ project }}</a></td>
+              <td><a href="{% url 'user_management' project.submitting_author.user.username %}">{{ project.submitting_author }}</a></td>
+              <td>{{ project.submission_datetime|date }}</td>
+              <td>{{ project.revision_request_datetime|date }}</td>
+              <td>{{ project.latest_reminder|date }}</td>
+              <td>
+                <form action="" method="post" class="form-signin">
+                  {% csrf_token %}
+                  {% if project.latest_reminder < yesterday %}
+                  <button class="btn btn-primary" name="send_reminder" value="{{ project.id }}" type="submit">Send Reminder Email</button>
+                  {% else %}
+                  <button class="btn btn-primary" name="send_reminder" value="{{ project.id }}" disabled type="submit">Send Reminder Email</button>
+                  {% endif %}
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p><i class="fas fa-check" style="color:green"></i> No projects to show.</p>
+    {% endif %}
+  </div>
+</div>
+
+{# Awaiting editor copyedit #}
+<div class="card mb-3">
+  <div class="card-header">
+    Awaiting Editor Copyedits {{ copyedit_projects|task_count_badge|safe }}
+  </div>
+  <div class="card-body">
+    {% if copyedit_projects %}
+      <div class="table-responsive">
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>Project</th>
+              <th>Submitting Author</th>
+              <th>Submitted</th>
+              <th>Accepted</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for project in copyedit_projects %}
+            <tr>
+              <td><a href="{% url 'submission_info' project.slug %}">{{ project }}</a></td>
+              <td><a href="{% url 'public_profile' project.submitting_author.user.username %}">{{ project.submitting_author }}</a></td>
+              <td>{{ project.submission_datetime|date }}</td>
+              <td>{{ project.editor_accept_datetime|date }}</td>
+              <td><a class="btn btn-primary btn-sm" href="{% url 'copyedit_submission' project.slug %}" role="button">Copyedit Project</a></td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p><i class="fas fa-check" style="color:green"></i> No projects to show.</p>
+    {% endif %}
+  </div>
+</div>
+
+{# Awaiting author approval #}
+<div class="card mb-3">
+  <div class="card-header">
+    Awaiting Author Approval {{ approval_projects|task_count_badge|safe }}
+  </div>
+  <div class="card-body">
+    {% if approval_projects %}
+      <div class="table-responsive">
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>Project</th>
+              <th>Submitting Author</th>
+              <th>Submitted</th>
+              <th>Accepted</th>
+              <th>Copyedit Completed</th>
+              <th>Latest reminder</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for project in approval_projects %}
+            <tr>
+              <td><a href="{% url 'submission_info' project.slug %}">{{ project }}</a></td>
+              <td><a href="{% url 'public_profile' project.submitting_author.user.username %}">{{ project.submitting_author }}</a></td>
+              <td>{{ project.submission_datetime|date }}</td>
+              <td>{{ project.editor_accept_datetime|date }}</td>
+              <td>{{ project.copyedit_completion_datetime|date }}</td>
+              <td>{{ project.latest_reminder|date }}</td>
+              <td><a class="btn btn-primary btn-sm" href="{% url 'awaiting_authors' project.slug %}" role="button">View</a></td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p><i class="fas fa-check" style="color:green"></i> No projects to show.</p>
+    {% endif %}
+  </div>
+</div>
+
+{# Awaiting editor publish #}
+<div class="card mb-3">
+  <div class="card-header">
+    Awaiting Publication {{ publish_projects|task_count_badge|safe }}
+  </div>
+  <div class="card-body">
+    {% if publish_projects %}
+      <div class="table-responsive">
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>Project</th>
+              <th>Submitting Author</th>
+              <th>Submitted</th>
+              <th>Accepted</th>
+              <th>Copyedit Completed</th>
+              <th>Author Approved</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for project in publish_projects %}
+            <tr>
+              <td><a href="{% url 'submission_info' project.slug %}">{{ project }}</a></td>
+              <td><a href="{% url 'public_profile' project.submitting_author.user.username %}">{{ project.submitting_author }}</td>
+              <td>{{ project.submission_datetime|date }}</td>
+              <td>{{ project.editor_accept_datetime|date }}</td>
+              <td>{{ project.copyedit_completion_datetime|date }}</td>
+              <td>{{ project.author_approval_datetime|date }}</td>
+              <td><a class="btn btn-primary btn-sm" href="{% url 'publish_submission' project.slug %}" role="button">Publish Project</a></td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p><i class="fas fa-check" style="color:green"></i> No projects to show.</p>
+    {% endif %}
+  </div>
+</div>
+
+{% endblock %}

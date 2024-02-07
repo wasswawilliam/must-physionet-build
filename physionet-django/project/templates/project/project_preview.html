@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+
+{% block title %}Project Preview - {{ project }}{% endblock %}
+
+{% load static %}
+
+{% load project_templatetags %}
+
+{% block local_css %}
+<link rel="stylesheet" type="text/css" href="{% static 'project/css/project-content.css' %}"/>
+<link rel="stylesheet" type="text/css" href="{% static 'highlight/css/default.min.css' %}"/>
+{% endblock %}
+{% block local_js_top %}
+<script src="{% static 'mathjax/MathJax.js' %}?config=MML_HTMLorMML"></script>
+<script src="{% static 'highlight/js/highlight.min.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  {% if 'Admin' in request.GET %}
+    <p><a class="btn btn-secondary"
+        href="{% url 'submission_info' project.slug %}" role="button">
+        <i class="fas fa-angle-left"></i> Return to the admin console</a></p>
+  {% elif not has_passphrase %}
+    <p><a class="btn btn-secondary"
+        href="{% url 'project_overview' project.slug %}" role="button">
+        <i class="fas fa-angle-left"></i> Return to project overview</a></p>
+  {% endif %}
+  
+  {% if has_passphrase %}
+  <div class="alert alert-danger">
+    <p>This is a preview of a resource that is undergoing our editorial process and is subject to change.</p>
+    <p>It is not guaranteed that this resource will be published, or that the content will be the same
+      at time of publication.</p>
+    <p class="m-0"><strong>Last modified: {{ project.modified_datetime }}</strong></p>
+  </div>
+  {% endif %}
+
+  {% if messages and not has_passphrase %}
+    {% if passes_checks %}
+      <div class="alert alert-success alert-dismissible">
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+        {% for message in messages %}
+          <strong>{{ message }}</strong>
+        {% endfor %}
+      </div>
+    {% else %}
+    <div class="alert alert-danger alert-dismissible">
+      <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+      </button>
+      <strong>The following errors must be addressed before submission:</strong>
+      <ul class="messages">
+        {% for message in messages %}
+          <li>{{ message }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+  {% endif %}
+
+  <p>
+    {{ project.resource_type.id|resource_badge|safe }}
+    {{ project.access_policy|access_badge|safe }}
+  </p>
+  <h1 class="form-signin-heading"><em>[Preview]:</em> {{ project.title }}
+  </h1>
+  <p>
+    <strong>
+    {% for author in authors %}
+      {{ author|show_author_info|safe }}
+      {% if forloop.counter < authors|length %},&nbsp;{% endif %}
+    {% endfor %}
+    {% for invitation in invitations %}
+      <a style="color:red">* Outstanding Invitation: {{ invitation.email }}</a>
+    {% endfor %}
+    </strong>
+  </p>
+
+  <p>Published: [dd/mm/yyyy] - Version:
+  {% if project.version %}
+    {% if project.version_clash %}
+      <a style="color:red"><strong>{{ project.version}} * Clashing Version</strong></a>
+    {% else %}
+      {{ project.version }}
+    {% endif %}
+  {% else %}
+    <a style="color:red"><strong>* Required field missing</strong></a>
+  {% endif %}
+  </p>
+  <hr>
+
+  <div class="row">
+    <!-- Main column -->
+    <div class="col-md-8" style="padding-left: 0;">
+
+      {% include "project/citation_box.html" %}
+
+      {# 0: Database #}
+      {% if project.resource_type.id == 0 %}
+        {% include "project/database_content_preview.html" %}
+      {# 1: Software #}
+      {% elif project.resource_type.id == 1 %}
+        {% include "project/software_content_preview.html" %}
+      {# 2: Challenge #}
+      {% elif project.resource_type.id == 2 %}
+        {% include "project/challenge_content_preview.html" %}
+      {# 3: Model #}
+      {% elif project.resource_type.id == 3 %}
+        {% include "project/model_content_preview.html" %}
+      {# Other #}
+      {% else %}
+        {% include "project/software_content_preview.html" %}
+      {% endif %}
+    </div>
+    <!-- /.main column -->
+
+    <!-- Sidebar Column -->
+    <div class="col-md-4" style="padding-right: 0;">
+      {% if parent_projects %}
+      <div class="card">
+        <h5 class="card-header">Parent Projects</h5>
+        <div class="card-body">
+            {{ project.title }} was derived from:
+            <ul>
+              {% for pp in parent_projects %}
+                <li><a href="{% url 'published_project' pp.slug pp.version %}">{{ pp }}</a></li>
+              {% endfor %}
+            </ul>
+            Please cite them when using this project.
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="card my-4">
+        <h5 class="card-header">Access</h5>
+        <div class="card-body">
+          <p>
+            <strong>Access Policy:</strong>
+            <br>
+            {{ project.access_policy|access_description }}
+          </p>
+          <p>
+            <strong>License (for files):</strong>
+            <br>
+            {% if project.license %}
+              <a href="{% url 'project_license_preview' project.slug %}">{{ project.license }}</a>
+            {% else %}
+              <a style="color:red"><strong>* Required field missing</strong></a>
+            {% endif %}
+          </p>
+          {% if project.dua %}
+            <p>
+              <strong>Data Use Agreement:</strong>
+              <br>
+              {% if project.license %}
+                <a href="{% url 'project_dua_preview' project.slug %}">{{ project.dua }}</a>
+              {% else %}
+                <a style="color:red"><strong>* Required field missing</strong></a>
+              {% endif %}
+            </p>
+          {% endif %}
+          {% if project.access_policy == AccessPolicy.CREDENTIALED or project.access_policy == AccessPolicy.CONTRIBUTOR_REVIEW %}
+            <p>
+              <strong>Required training:</strong>
+              {% for training in project.required_trainings.all %}
+                <br>
+                <a href="{% url 'project_required_trainings_preview' project.slug %}#{{ training.id }}">{{ training }}</a>
+              {% endfor%}
+            </p>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="card my-4">
+        <h5 class="card-header">Discovery</h5>
+        <div class="card-body">
+          <p><strong>DOI (version {{ project.version }}):</strong><br>
+            https://doi.org/10.13026/*****
+          </p>
+
+          <p><strong>DOI (latest version):</strong><br>
+            https://doi.org/10.13026/*****
+          </p>
+
+          {% if languages %}
+            <p><strong>Programming Languages:</strong>
+            <br>
+            {% for language in languages %}
+              <style class="badge badge-info">{{ language.name }}</style>
+            {% endfor %}
+            </p>
+          {% endif %}
+
+          {% if topics %}
+            <p><strong>Topics:</strong>
+            <br>
+            {% for topic in topics %}
+              {{ topic|topic_badge|safe }}
+            {% endfor %}
+            </p>
+          {% endif %}
+
+          {% if project.project_home_page %}
+            <p><strong>Project Website:</strong><br>
+            <a href="{{ project.project_home_page }}"><i class="fas fa-external-link-alt"></i> {{ project.project_home_page }}</a>
+            </p>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="card my-4">
+        <h5 class="card-header">Corresponding Author</h5>
+        <div class="card-body">
+            <p>
+            {{ corresponding_author.get_full_name }},
+            {{ corresponding_author.text_affiliations }},
+            {{ corresponding_author.corresponding_email }}
+            </p>
+        </div>
+      </div>
+    </div>
+    <!-- /.sidebar -->
+  </div>
+  <h2>Files</h2>
+  {% if project.embargo_files_days %}
+    <div class="alert alert-warning col-md-8" role="alert">
+      The files in this project version are under embargo until {{ project.embargo_files_days }} day{{ project.embargo_files_days|pluralize }} after publication. The files shown below will be hidden in the published project as part of this embargo.
+    </div>
+  {% endif %}
+  {% if is_lightwave_supported %}
+    {% if project.has_wfdb %}
+      <p><a href="{% url 'lightwave_project_home' project.slug %}?db={{ project.slug }}"><i class="fas fa-chart-line"></i> Visualize waveforms</a></p>
+    {% endif %}
+  {% endif %}
+  <div id="files-panel" class="card">
+    {% include "project/files_panel_v2.html" %}
+  </div>
+  <br>
+
+</div>
+{% endblock %}
+
+{% block local_js_bottom %}
+<script src="{% static 'project/js/dynamic-files-panel.js' %}"></script>
+<script src="{% static 'custom/js/enable-popover.js' %}"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+{% endblock %}

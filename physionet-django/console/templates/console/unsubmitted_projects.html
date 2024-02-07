@@ -1,0 +1,40 @@
+{% extends "console/base_console.html" %}
+
+{% load static %}
+
+{% block title %}Unsubmitted Projects{% endblock %}
+
+{% block local_css %}
+<link rel="stylesheet" type="text/css" href="{% static 'custom/css/pagination.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="card mb-3">
+  <div class="card-header">
+    Unsubmitted Projects <span class="badge badge-pill badge-info">{{ projects.paginator.count }}</span>
+  </div>
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table table-bordered">
+        <thead>
+          <tr>
+            <th>Project</th>
+            <th>Submitted By</th>
+            <th>Created</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for project in projects %}
+          <tr>
+            <td><a href="{% url 'project_preview' project.slug %}?Admin=True">{{ project.title }}</a></td>
+            <td><a href="{% url 'public_profile' project.submitting_author.user.username %}">{{ project.submitting_author }}</a></td>
+            <td>{{ project.creation_datetime|date }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      {% include "console/pagination.html" with pagination=projects %}
+    </div>
+  </div>
+</div>
+{% endblock %}

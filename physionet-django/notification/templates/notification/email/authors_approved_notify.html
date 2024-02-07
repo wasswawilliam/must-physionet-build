@@ -1,0 +1,13 @@
+{% load i18n %}{% autoescape off %}{% filter wordwrap:70 %}
+{{ project_info }}
+
+Dear {{ name }},
+
+We are pleased to say that all authors have approved the publication of your project entitled "{{ project.title }}".
+
+Thanks for submitting your work to {{ SITE_NAME }}. The editors will publish your project shortly.
+
+{{ signature }}
+
+{{ footer }}
+{% endfilter %}{% endautoescape %}

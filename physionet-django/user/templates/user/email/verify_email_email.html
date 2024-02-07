@@ -1,0 +1,12 @@
+{% load i18n %}{% autoescape off %}{% filter wordwrap:70 %}
+Dear {{ name }},
+
+You have requested this email to be added to your account on {{ domain }}. Please verify this email by clicking the following activation link, or copying and pasting the link into your web browser:
+
+{{ url_prefix }}{% url 'verify_email' uidb64=uidb64 token=token %}
+
+This link will expire in 3 days or after the email has been verified.
+
+Regards
+The {{ SITE_NAME }} Team
+{% endfilter %}{% endautoescape %}

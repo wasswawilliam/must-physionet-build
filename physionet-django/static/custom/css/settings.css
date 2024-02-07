@@ -1,0 +1,148 @@
+/*
+ * Style tweaks
+ * --------------------------------------------------
+ */
+.btn-custom {
+  margin-top: 10px;
+}
+
+footer {
+  padding: 10px 0;
+}
+
+.btn-fixed {
+    min-width: 200px;
+    max-width: 200px;
+}
+
+input, select, django-ckeditor-widget, textarea {
+  display: block;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  font-size: 1rem;
+  line-height: 1.25;
+  color: #495057;
+  background-color: #fff;
+  background-image: none;
+  background-clip: padding-box;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 0.25rem;
+  transition: border-color ease-in-out 0.15s, box-shadow ease-in-out 0.15s;
+}
+
+input::-ms-expand {
+  background-color: transparent;
+  border: 0;
+}
+
+input:focus {
+  color: #495057;
+  background-color: #fff;
+  border-color: #80bdff;
+  outline: none;
+}
+
+input::-webkit-input-placeholder {
+  color: #868e96;
+  opacity: 1;
+}
+
+input:-ms-input-placeholder {
+  color: #868e96;
+  opacity: 1;
+}
+
+input::placeholder {
+  color: #868e96;
+  opacity: 1;
+}
+.form-check-input-inline {
+  position: absolute;
+  margin-top: 0.25rem;
+}
+/*
+ * Off Canvas
+ * --------------------------------------------------
+ */
+@media screen and (max-width: 1210px) {
+  .row{
+    display: block;
+  }
+
+  .sidebar-offcanvas{
+    display: block;
+    margin-bottom: 50px;
+    max-width: unset;
+    padding: 0;
+  }
+
+  .row-offcanvas, .row-offcanvas > div{
+    max-width: unset;
+    flex: unset;
+  }
+}
+
+@media screen and (min-width: 1211px) {
+  .sett-side:first-child{
+    padding-right: 30px;
+  }
+
+  .form-control.email{
+    padding-right: 10px;
+  }
+
+  .mg-left{
+    margin-left: 15px;
+    width: calc(25% - 15px);
+  }
+
+  .pg-edit{
+    width: 40%;
+    margin-left: 60%;
+    margin-top: -25px;
+  }
+}
+
+/*
+ * Data Use Agreement
+ * --------------------------------------------------
+ */
+
+#agreement {
+  margin: 10px 10px 10px 10px;
+  font-family: Georgia, serif;
+  text-align: center;
+}
+
+#agreement p, #agreement ol {
+  text-align: left;
+}
+
+#outer-border {
+  width: 850px;
+  height: 950px;
+  padding: 20px;
+  border-width: 8px;
+  border-style: solid;
+  border-color: #515151;
+}
+
+#inner-border {
+  width: 800px;
+  height: 900px;
+  padding: 30px;
+  border-width: 4px;
+  border-style: solid;
+  border-color: #515151;
+}
+
+@media print {
+  .printbutton {
+    visibility: hidden;
+    display: none;
+  }
+}
+
+.printbutton {
+  border: 0px;
+}

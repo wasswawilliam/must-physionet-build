@@ -1,0 +1,112 @@
+{# Status section #}
+{% load static %}
+{% load console_templatetags %}
+
+<p>Username: <a href="{% url 'user_management' application.user.username %}">{{ application.user.username }}</a></br>
+Applied: {{ application.application_datetime|date }}</p>
+
+{% if application.decision_datetime %}
+  Decision date: {{ application.decision_datetime|date }}<br />
+{% endif %}
+
+{% if application.responder_comments %}
+  Admin Comments: {{ application.responder_comments|linebreaks }}
+{% endif %}
+
+<h5>Personal</h5>
+<p>[<a href="https://www.google.com/search?q={{ application.first_names }} {{ application.last_name }} {{ application.organization_name }}" target="_blank">Search for name and affiliation.</a>]</p>
+<ul>
+  <li>First name: <mark>{{ application.first_names }}</mark></mark></li>
+  <li>Last name: <mark>{{ application.last_name }}</mark></li>
+  {% if application.suffix %}<li>Suffix: {{ application.suffix }}</mark></li>{% endif %}
+  <li>Email (primary): <mark>{{ application.user.email }}</mark></li>
+  <li>Emails (other): 
+    {% with associated_emails=application.user|get_verified_emails %}
+    {% for email in associated_emails %}
+      <mark>{{ email }}</mark>{% if not forloop.last %}, {% endif %}
+    {% empty %}N/A
+    {% endfor %}
+    {% endwith %}
+  </li>
+  <li>Position: <mark>{{ application.job_title }}</mark></li>
+  <li>Research category: <mark>{{ application.get_researcher_category_display }}</mark></li>
+  <li>ORCID: <mark>
+    {% if application.user.orcid %}<img src='{% static "images/ORCIDiD_icon24x24.png" %}' />
+      <a href="{{ application.user.orcid.get_orcid_url }}/{{ application.user.orcid.orcid_id }}" rel="noopener" target="_blank">{{ application.user.orcid.get_orcid_url }}/{{ application.user.orcid.orcid_id }}</a>
+    {% else %}No ORCID iD linked{% endif %}
+  </mark></li>
+</ul>
+
+<h5>Location</h5>
+
+<ul>
+  <li>Institution: <mark>{{ application.organization_name }}</mark></li>
+  <li>Address: <mark>{{ application.city }}, {{ application.state_province }},  {{ application.zip_code }}</mark></li>
+  <li>Country: <mark>{{ application.get_country_display }}</mark></li>
+  <li>Webpage: <mark>{% if application.webpage %}<a href="{{ application.webpage }}" target="_blank">
+      {{ application.webpage }}</a>{% else %}N/A{% endif %}</mark></li>
+</ul>
+
+<h5>Training</h5>
+  <ul>
+    {% for status, training in training_list.items %}
+      <li><h6>{{ status }}</h6>
+        <ul>
+          {% for train in training %}
+            <li>
+              {{ train.training_type.name }}
+              {% if status == "Under review" %}
+                <a href="{% url 'training_process' train.id %}">(Review training)</a>
+              {% endif %}
+            </li>
+          {% empty %}
+            <li> N/A </li>
+          {% endfor %}
+        </ul>
+      </li>
+    {% endfor %}
+  </ul>
+
+
+<h5>Reference</h5>
+
+{% if application.reference_contact_datetime %}
+  <ul><li>Contact date: {{ application.reference_contact_datetime|date }}<br />
+  {% if application.reference_response_datetime %}
+    Response date: {{ application.reference_response_datetime|date }}<br />
+    Approved: {{ application.get_reference_response_display }}<br />
+    Comments: {{ application.reference_response_text }}
+  {% else %}
+    Response date: Awaiting response.<br />
+    Approved: Awaiting response.<br />
+  {% endif %}
+  </li>
+  </ul>
+{% endif %}
+
+{% if application.reference_email %}
+  <p>[<a href="https://www.google.com/search?q={{ application.reference_name }} {{ application.reference_email }}" target="_blank">Search for reference name and email.</a>]</p>
+  <ul>
+    <li>Name: <mark>{{ application.reference_name }}</mark></li>
+    <li>Email: <mark>{{ application.reference_email }}</mark></li>
+    <li>Organization: <mark>{{ application.reference_organization }}</mark></li>
+    <li>Position: <mark>{{ application.reference_title }}</mark></li>
+    <li>Relationship: <mark>{{ application.get_reference_category_display }}</mark></li>
+    <li>Active User: <mark>{{ application.ref_user_flag|yesno:"Yes,No" }}</mark></li>
+    <li>Credentialed User: <mark>{{ application.ref_credentialed_flag|yesno:"Yes,No" }}</mark></li>
+    <li>ORCID: <mark>
+      {% if application.get_reference_user.orcid %}<img src='{% static "images/ORCIDiD_icon24x24.png" %}' />
+        <a href="{{ application.get_reference_user.orcid.get_orcid_url }}/{{ application.get_reference_user.orcid.orcid_id }}" rel="noopener">{{ application.get_reference_user.orcid.get_orcid_url }}/{{ application.get_reference_user.orcid.orcid_id }}</a>
+      {% else %}No ORCID iD linked{% endif %}
+    </mark></li>
+  </ul>
+{% else %}
+<ul><li>No reference provided</li></ul>
+{% endif %}
+
+<h5>Research</h5>
+
+<ul>
+  <li>Topic: <mark>{{ application.research_summary }}</mark></li>
+</ul>
+

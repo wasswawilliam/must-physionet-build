@@ -1,0 +1,17 @@
+{% load i18n %}{% autoescape off %}Dear {{ application.reference_name }},
+
+{{ applicant_name }} has applied for access to protected data on {{ SITE_NAME }} and listed you as a reference. Are you familiar with {{ applicant_name }}'s research, and in your view would it be reasonable to grant this request?
+
+If you support their application, please indicate your approval using the link below. If you do not support their application, you may ignore this email or update us via the link.
+
+{% if application.reference_verification_token  %}
+{{ url_prefix }}{% url 'credential_reference_verification' application.slug application.reference_verification_token %}
+{% else %}
+{{ url_prefix }}{% url 'credential_reference' application.slug %}
+{% endif %}
+
+{{ applicant_name }} provided the following reason for requesting access: 
+
+{{ application.research_summary.strip }}
+
+{{ signature }}{% endautoescape %}

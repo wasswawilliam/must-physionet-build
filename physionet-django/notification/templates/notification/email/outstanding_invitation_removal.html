@@ -1,0 +1,11 @@
+{% load i18n %}{% autoescape off %}{% filter wordwrap:70 %}
+{{ project_info }}
+
+Dear {{ name }},
+
+Your invitation to {{ email }} to co-author your project entitled "{{ title }}" has not been accepted for two weeks. The invitation has therefore been closed. Please check your co-author's contact details and resend the invitation if appropriate.
+
+{{ signature }}
+
+{{ footer }}
+{% endfilter %}{% endautoescape %}

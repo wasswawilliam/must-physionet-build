@@ -1,0 +1,446 @@
+{% extends "console/base_console.html" %}
+
+{% load static %}
+
+{% load project_templatetags %}
+
+{% block title %}Manage Project - {{ project }}{% endblock %}
+
+{% block local_css %}
+<link rel="stylesheet" type="text/css" href="{% static 'project/css/submission-timeline.css' %}">
+{% endblock %}
+
+{% block local_js_top %}
+<script src="{% static 'custom/js/copy-to-clipboard.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+<h1>Manage Project - {{ project }}</h1>
+<hr>
+<div class="card mb-3">
+  <div class="card-header">
+    <ul class="nav nav-tabs card-header-tabs">
+      <li class="nav-item">
+        <a class="nav-link active" id="info-tab" data-toggle="tab" href="#info" role="tab" aria-controls="info" aria-selected="true">Project Information</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" id="timeline-tab" data-toggle="tab" href="#timeline" role="tab" aria-controls="timeline" aria-selected="false">Submission Timeline</a>
+      </li>
+    </ul>
+  </div>
+  <div class="card-body">
+    <div class="tab-content">
+      <div class="tab-pane fade show active" id="info" role="tabpanel" aria-labelledby="info-tab">
+        <p>{{ project.resource_type.id|resource_badge|safe }} {{ project.access_policy|access_badge|safe }}</p>
+        <h4 class="card-title"><a href="{% url 'published_project' project.slug project.version %}" target="_blank">{{ project.title }}</a></h4>
+        <p class="card-text">
+          Authors: {% for author in authors %}{{ author|show_all_author_info|safe }} {% endfor %}<br>
+          Created: {{ project.creation_datetime|date }}. Submitted: {{ project.submission_datetime|date }}. Published: {{ project.publish_datetime|date }}<br>
+          Storage: {{ storage_info.readable_main_used }} uncompressed, {{ storage_info.readable_compressed_used }} compressed, {{ storage_info.readable_used }} total, {{ storage_info.readable_allowance }} allowance.<br>
+          Version: {{ project.version }}{% if project.is_latest_version %} (latest){% else %}<br>Latest Published Version: <a href="{% url 'published_project' latest_version.slug latest_version.version %}" target="_blank">{{ latest_version.version }}</a>{% endif %}
+        </p>
+        <p class="card-text">
+          Description: {{ project.short_description }}
+        </p>
+      </div>
+      <div class="tab-pane fade" id="timeline" role="tabpanel" aria-labelledby="timeline-tab">
+        {% include "project/static_submission_timeline.html" %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- legacy project management -->
+{% if project.is_legacy %}
+<div class="card mb-3">
+    <div class="card-header">
+      Legacy project management
+    </div>
+    <div class="card-body">
+      <h3>Add an author</h3>
+
+      <form method="POST" id="legacy_author_form">
+        {% include "inline_form_snippet.html" with form=legacy_author_form %}
+        <button class="btn btn-primary btn-fixed" name="set_legacy_author" type="submit">Set author</button>
+      </form>
+
+    </div>
+</div>
+{% endif %}
+
+<!-- Associated publication -->
+<div class="card mb-3">
+  <div class="card-header">
+    Associated publication
+  </div>
+  <div class="card-body">
+    {% if project.publications.all %}
+      {% for publication in project.publications.all %}
+        <p><strong>Citation</strong>: {{ publication.citation }}<br />
+          <strong>URL</strong>: {{ publication.url }}</p>
+      {% endfor %}
+    {% else %}
+      <form method="POST" id="publication_form">
+        {% include "inline_form_snippet.html" with form=publication_form %}
+        <button class="btn btn-primary btn-fixed" name="set_publication" type="submit">Add publication</button>
+      </form>
+    {% endif %}
+
+  </div>
+</div>
+
+
+<div class="card mb-3">
+    <div class="card-header">
+      Contact information
+    </div>
+    <div class="card-body">
+      <h3>Project contact information</h3>
+      <form method="POST" id="contact_form">
+        {% csrf_token %}
+        {% include "inline_form_snippet.html" with form=contact_form %}
+        <button class="btn btn-primary btn-fixed" name="set_contact" type="submit">Set contact</button>
+      </form>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header">
+      Contact authors
+    </div>
+    <div class="card-body">
+      <p>Click the button below to copy the email addresses of the project authors to your clipboard.</p>
+      <button class="btn btn-primary" onclick="copyToClipboard('{{ author_emails }}')">Copy author emails</button>
+    </div>
+</div>
+
+{% if project.access_policy %}
+<div class="card mb-3">
+    <div class="card-header">
+      Anonymous access
+    </div>
+    <div class="card-body">
+        <p>
+          You can generate a passphrase that will allow anonymous access to the
+          <i><a href="{% url 'published_project' project.slug project.version %}" target="_blank">content</a></i> of this project.
+          This is useful if the authors are submitting an article to a peer-reviewed journal and access
+          to a {{ SITE_NAME }} resource is needed during the review process.
+          <br>
+          {% if anonymous_url %}
+            The URL for reviewer access is:
+            <a href="{% url 'anonymous_login' anonymous_url %}" target="_blank">{{ url_prefix }}{% url 'anonymous_login' anonymous_url %}</a>
+          {% endif %}
+        </p>
+        <div
+          {% if not passphrase %}
+            class="alert alert-danger">
+            <p class='m-0'>Note: When providing anonymous access to third parties, keep in mind that any changes made during
+              the {{ SITE_NAME }} review process will impact anyone viewing the project through that access.</p>
+          {% else %}
+            class="alert alert-success">
+            Passphrase: {{ passphrase }}
+          {% endif %}
+        </div>
+        <form action="{% url 'manage_published_project' project.slug project.version %}" method="POST" id="passphrase_form">
+          {% csrf_token %}
+          {% if not project.anonymous.first %}
+          <button class="btn btn-primary btn-rsp" type="submit" name="generate_passphrase">
+            Grant access
+          </button>
+          {% else %}
+          <button class="btn btn-danger btn-rsp" type="submit" name="remove_passphrase">
+            Revoke access
+          </button>
+          {% endif %}
+        </form>
+    </div>
+</div>
+{% endif %}
+
+<div class="card mb-3">
+    <div class="card-header">
+      Manage Digital Object Identifiers (DOIs)
+    </div>
+    <div class="card-body">
+      <p>All published projects should be associated with two DOIs: (1) A version-specific DOI, and (2)
+        A "core project" DOI that resolves to the latest version .</p>
+      <div class="alert alert-success">
+        <strong>Core project (Latest version)</strong>: 
+        {% if project.core_project.doi %}
+        https://doi.org/{{ project.core_project.doi }}
+        {% else %}
+        The core project does not have a DOI.
+        {% endif %}
+        <br />
+        <strong>This version (version {{ project.version }})</strong>:
+        {% if project.doi %}
+        https://doi.org/{{ project.doi }}
+        {% else %}
+        The project version does not have a DOI.
+        {% endif %}
+      </div>
+
+    <form action="{% url 'manage_published_project' project.slug project.version %}" method="POST" id="manage_doi_form">
+      {% csrf_token %}
+      {% if project.core_project.doi %}
+        <button class="btn btn-primary btn-rsp" type="submit" name="update_doi_core">
+          Update metadata (core)
+        </button>
+      {% else %}
+        <button class="btn btn-primary btn-rsp" type="submit" name="create_doi_core">
+          Create DOI (core)
+        </button>  
+      {% endif %}
+      {% if project.doi %}
+        <button class="btn btn-primary btn-rsp" type="submit" name="update_doi_version">
+          Update metadata (v.{{ project.version }})
+        </button>
+      {% else %}
+        <button class="btn btn-primary btn-rsp" type="submit" name="create_doi_version">
+          Create DOI (v.{{ project.version }})
+        </button>
+      {% endif %}
+    </form>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header">
+      Manage topics
+    </div>
+    <div class="card-body">
+    <form action="" method="post">
+      {% csrf_token %}
+      {% include "form_snippet.html" with form=topic_form %}
+      <button class="btn btn-primary btn-fixed" name="set_topics" type="submit">Set topics</button>
+    </form>
+    </div>
+</div>
+
+<div class="card mb-3">
+  <div class="card-header">
+    Manage files
+  </div>
+  <div class="card-body mb-2">
+    <ul class="list-group list-group-flush">
+      {% if can_make_zip or can_make_checksum %}
+        <li class="list-group-item">
+        <h5 class="card-title mb-1">Generate special files</h5>
+        <p>Generate (or regenerate) the project checksum file and zip file. If you regenerate these files, they will need to be resent to the cloud servers.</p>
+  
+        {% for task in rw_tasks %}
+        <div class="alert alert-warning">
+          <strong>Pending task:</strong> {{ task }}
+        </div>
+        {% endfor %}
+  
+        {% for task in ro_tasks %}
+        <div class="alert alert-info">
+          <strong>Pending task:</strong> {{ task }} (read-only)
+        </div>
+        {% endfor %}
+  
+        {% if project.deprecated_files %}
+          <p>This project's files are deprecated.</p>
+        {% else %}
+          <form action="" method="post">
+            {% csrf_token %}
+            {% if can_make_checksum %}
+            <button class="btn btn-primary btn-fixed" name="make_checksum_file"
+                    {% if rw_tasks or ro_tasks %} disabled="disabled" {% endif %}
+                    type="submit">Make checksum</button>
+            {% endif %}
+            {% if can_make_zip %}
+            <button class="btn btn-primary btn-fixed" name="make_zip"
+                    {% if rw_tasks or ro_tasks %} disabled="disabled" {% endif %}
+                    type="submit">Make zip</button>
+            {% endif %}
+          </form>
+        {% endif %}
+        </li>
+      {% endif %}
+      <li class="list-group-item">
+      <h5 class="card-title mb-1">Deprecate files</h5>
+      <p>If you deprecate the project files, they will no longer be available for people to download. A message will be displayed in the file section, explaining that the files have been removed.</p>
+      {% if project.deprecated_files %}
+        <p>This project's files are deprecated.</p>
+      {% else %}
+        <form action="" method="post">
+          {% csrf_token %}
+          <button id="delete-items-button" type="button"
+                  class="btn btn-primary btn-fixed" data-toggle="modal"
+                  {% if rw_tasks or ro_tasks %} disabled="disabled" {% endif %}
+                  data-target="#deprecate-files-modal">Deprecate files</button>
+        </form>
+        {# Modal for deprecating files #}
+        <div class="modal fade" id="deprecate-files-modal" tabindex="-1" role="dialog" aria-hidden="true">
+          <div class="modal-dialog" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Deprecate Project Files</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <form action="" method="post">
+                <div class="modal-body">
+                  {% csrf_token %}
+                  {{ deprecate_form }}
+                </div>
+                <div class="modal-footer">
+                  <button class="btn btn-danger" name="deprecate_files" type="submit">Deprecate Files</button>
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+      </li>
+      <li class="list-group-item">
+      <h5 class="card-title mb-1">Embargo files</h5>
+      {% if project.embargo_active %}
+        <div class="alert alert-danger col-md-8" role="alert">
+          The files for this project version are under embargo until: {{ project.embargo_end_date|date }}
+        </div>
+        <form action="" method="post">
+          {% csrf_token %}
+          <button id="embargo-items-button" type="button"
+                  class="btn btn-primary btn-fixed" data-toggle="modal"
+                  {% if rw_tasks or ro_tasks %} disabled="disabled" {% endif %}
+                  data-target="#embargo-files-modal">Remove embargo</button>
+        </form>
+        {# Modal for embargoing files #}
+        <div class="modal fade" id="embargo-files-modal" tabindex="-1" role="dialog" aria-hidden="true">
+          <div class="modal-dialog" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Remove embargo</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <form action="" method="post">
+                <div class="modal-body">
+                  {% csrf_token %}
+                  <p>Please confirm that you want to remove the embargo on the files for: {{ project }} </p>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                  <button class="btn btn-danger" name="remove_embargo" type="submit">Remove embargo</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      {% else %}
+        The files in this project version are not under embargo. An embargo can only be set when publishing a submitted
+        project.
+      {% endif %}
+      </li>
+    </ul>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header">
+      Manage cloud integration
+    </div>
+    <div class="card-body">
+      <ul class="list-group list-group-flush">
+      <li class="list-group-item">
+        <h5 class="card-title mt-0 mb-1">Storage location</h5>
+        <p>Add and remove storage options.</p>
+        <div class="alert alert-danger">
+          <p class='m-0'>Note: The remove button will remove the option for requesting cloud access that appears in the files section of a project. It will not (1) delete/deactivate the bucket or (2) remove access for users who are already using the bucket.</p>
+        </div>
+        <form action="" method="post">
+          {% csrf_token %}
+          {% include "project/content_inline_form_snippet.html" with form=data_access_form %}
+          <button class="btn btn-primary" type="submit">Submit</button>
+        </form>
+        {% if data_access %}
+        <table class="table table-bordered">
+            <tr>
+              <th>Data Accessible By</th>
+              <th>Location</th>
+              <th>Remove</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in data_access %}
+            <tr>
+              <td>{{item.get_platform_display}}</td>
+              <td>{{item.location}}</td>
+              <form action="" method="post">
+                {% csrf_token %}
+                <td><button class='btn btn-danger' name='data_access_removal' value='{{item.id}}'>Remove</button></td>
+              </form>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% endif %}
+      </li>
+      <li class="list-group-item">
+        <h5 class="card-title mt-3 mb-1">Google Cloud</h5>
+        {% if not has_credentials %}
+          <p>You are missing the Google Cloud credentials.</p>
+        {% elif not project.gcp.bucket_name %}
+          <p>Create a bucket on the Google Cloud Platform (GCP) to store the files associated with this project. Please create the special files before sending the files to GCP.</p>
+          <form action="" method="post">
+          {% csrf_token %}
+          <button class="btn btn-primary" name="bucket" value='{{project.slug}}'
+                  {% if rw_tasks %} disabled="disabled" {% endif %}
+                  type="submit">Create bucket and send files </button><br><br>
+          </form>
+        {% elif project.gcp.sent_files and project.gcp.bucket_name %}
+          <p>The files have been sent to GCP. The bucket name is: {{project.gcp.bucket_name}}.</p>
+          <form action="" method="post">
+          {% csrf_token %}
+          <button class="btn btn-primary" name="bucket" value='{{project.slug}}'
+                  {% if rw_tasks %} disabled="disabled" {% endif %}
+                  type="submit">Resend files </button><br><br>
+        </form>
+
+        {% else %}
+          <p>The files are being sent to GCP. The bucket name is: {{project.gcp.bucket_name}}.</p>
+          <p>If this message is here for a long time, check the Django "process_tasks"</p>
+        {% endif %}
+      </li>
+      <li class="list-group-item">
+        <h5 class="card-title mt-3 mb-1">AWS</h5>
+        {% if not has_s3_credentials %}
+          <p>
+            Support for Amazon S3 is not enabled.  (Check that
+            <code>AWS_PROFILE</code> and <code>S3_OPEN_ACCESS_BUCKET</code>
+            are set.)
+          </p>
+        {% elif not project.aws.bucket_name %}
+          <p>Create a bucket on AWS to store the files associated with this project.</p>
+          <form action="" method="post">
+            {% csrf_token %}
+            <button class="btn btn-primary" name="aws-bucket" value='{{project.slug}}'
+                    {% if rw_tasks %} disabled="disabled" {% endif %}
+                    type="submit">Create AWS bucket and send files</button><br><br>
+            </form>
+        {% elif project.aws.sent_files and project.aws.bucket_name %}
+          <p>The files have been sent to AWS. The bucket name is: {{project.aws.bucket_name}}.</p>
+          <form action="" method="post">
+          {% csrf_token %}
+          <button class="btn btn-primary" name="aws-bucket" value='{{project.slug}}'
+                  {% if rw_tasks %} disabled="disabled" {% endif %}
+                  type="submit">Resend files to AWS</button><br><br>
+        </form>
+        {% endif %} 
+      </li>
+    </ul>
+
+  </div>
+</div>
+
+{% endblock %}
+
+{% block local_js_bottom %}
+<script src="{% static 'custom/js/enable-popover.js' %}"></script>
+{% endblock %}

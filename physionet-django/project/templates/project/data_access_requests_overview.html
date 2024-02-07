@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% load static %}
+
+{% block title %}View Data Access Request{% endblock %}
+
+{% block content %}
+    <div class="container col-md-8">
+        <h1>Requests Overview for {{ project.title }} {{ project.version }}</h1>
+        {% if requests|length %}
+            <p>Total {{ requests|length }} requests, {{ accepted_requests }} accepted requests.</p>
+
+            <div class="table-responsive">
+                <table class="table table-bordered" width="100%"
+                       cellspacing="0">
+                    <thead>
+                    <tr>
+                        <th>Requester</th>
+                        <th>Data Use Title</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for req in requests %}
+                        <tr>
+                            <td>{{ req.requester.get_full_name }}</td>
+                            <td>{{ req.data_use_title }}</td>
+                            <td>
+                                {{ req.status_text }}{% if req.is_accepted %}, valid {% if req.valid_until %}until {{ req.valid_until }}{% else %}forever {% endif %}{% endif %}
+                            </td>
+                            <td>
+                                <a class="btn btn-sm btn-primary mb-1" href="{% url  'data_access_request_view' req.project.slug req.project.version req.pk %}">Details</a>
+                                {% if req.is_accepted %}
+                                    <form method="post" action="{% url 'data_access_requests_overview' project.slug project.version %}">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="revoke_request_id" id="revoke_request_id" value="{{ req.id }}">
+                                        <button type="button" data-target="#revoke-access-request" tabindex="-1" role="dialog" data-toggle="modal" class="btn btn-sm btn-danger">Revoke</button>
+                                        <div class="modal fade" id="revoke-access-request" tabindex="-1" role="dialog" aria-labelledby="revoke-access-request-modal" aria-hidden="true">
+                                            <div class="modal-dialog" role="document">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title">Revoke Access Request</h5>
+                                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                            <span aria-hidden="true">&times;</span>
+                                                        </button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <p>Are you sure you want to revoke the access request?</p>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button class="btn btn-danger" type="submit">Revoke</button>
+                                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p>No requests yet.</p>
+        {% endif %}
+
+        {% if is_additional_reviewer %}
+            <div>
+                <button id="revoke-button" type="button" class="btn btn-danger"
+                        data-toggle="modal" data-target="#revoke-modal">Stop Reviewing Requests
+                </button>
+            </div>
+            <div class="modal fade" id="revoke-modal" tabindex="-1"
+                 role="dialog" aria-labelledby="revoke-modal"
+                 aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Stop Reviewing Requests</h5>
+                            <button type="button" class="close"
+                                    data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <form action="" method="post">
+                            <div class="modal-body">
+                                {% csrf_token %}
+                                <p>Are you sure you'd like to stop reviewing requests for this project?</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button class="btn btn-danger" name="stop_review" type="submit">
+                                    Yes
+                                </button>
+                                <button type="button" class="btn btn-secondary"
+                                        data-dismiss="modal">No
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+        <div>
+            <br/>
+            <p><a href="{% url 'project_home' %}">Return to Project Home</a></p>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,8 @@
+{% load i18n %}{% autoescape off %}{% filter wordwrap:70 %}
+Dear {{ name }},
+
+The email "{{ email }}" you attempted to add to your account has been un-verified for 3 days and thus removed.
+
+Regards
+The {{ SITE_NAME }} Team
+{% endfilter %}{% endautoescape %}

@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% load static %}
+
+{% block title %}
+{{ SITE_NAME }} Tutorials
+{% endblock %}
+
+
+{% block local_css %}
+<link rel="stylesheet" type="text/css" href="{% static 'custom/css/about.css' %}">
+{% endblock %}
+
+
+{% block content %}
+
+<div class="main">
+  <div class="row">
+    <div class="main-side">
+
+      <div class="card">
+        <h2 class="card-header">Tutorials</h2>
+        <div class="card-body">
+
+            <!-- Tutorials -->
+            <ul>
+              <li><a href="#howto">How to...</a></li>
+              <li><a href="#exploreanalyse">Exploration and analysis</a></li>
+              <li><a href="#workshops">Workshops</a></li>
+              <li><a href="#reference">Reference guides</a></li>
+              <li><a href="#othertutorial">Other tutorials</a></li>
+            </ul>
+
+        </div>
+      </div>
+    </div><div class="main-content">
+      <div>{% include "about/tutorial_content.html" %}</div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
