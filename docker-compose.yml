@@ -48,7 +48,7 @@ services:
     environment:
       <<: *default-env
       DB_NAME: physionet_test
-    env_file: .env.example
+    env_file: .env
     command: ['sleep']
     volumes:
       - ./pyproject.toml:/code/pyproject.toml:rw
