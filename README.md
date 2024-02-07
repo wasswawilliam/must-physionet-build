@@ -1,6 +1,6 @@
 # PhysioNet Build
 
-The new PhysioNet platform built using Django. The new site is currently hosted at [https://physionet.org/](https://physionet.org/)
+The new MUST-PhysioNet platform built using Django. The new site is currently hosted at [https://physionet.org/](https://physionet.org/)
 
 ## Running Local Instance Using Django Server
 
